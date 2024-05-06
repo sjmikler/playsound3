@@ -1,9 +1,35 @@
+import os
 import logging
+from urllib.request import pathname2url
 from platform import system
 
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 SYSTEM = system()
+
+
+def playsound(sound, block=False):
+    _playsound(sound, block=block)
+
+
+def _playsound(*args, **kwds):
+    raise Exception("Function not initialized yet!")
+
+
+def _initialize_playsound():
+    global _playsound
+
+    system_to_func = {
+        "Windows": _playsoundWin,
+        "Linux": _playsoundNix,
+
+        # OSX is temporarily not supported
+        # "Darwin": _playsoundOSX,
+    }
+
+    _playsound = system_to_func.get(SYSTEM, None)
+    assert _playsound is not None, f"Unsupported system: {SYSTEM}"
 
 
 class PlaysoundException(Exception):
@@ -81,9 +107,7 @@ def _handlePathOSX(sound):
 
     if "://" not in sound:
         if not sound.startswith("/"):
-            from os import getcwd
-
-            sound = getcwd() + "/" + sound
+            sound = os.getcwd() + "/" + sound
         sound = "file://" + sound
 
     try:
@@ -100,46 +124,44 @@ def _handlePathOSX(sound):
         return parts[0] + "://" + quote(parts[1].encode("utf-8")).replace(" ", "%20")
 
 
-def _playsoundOSX(sound, block):
-    """
-    Utilizes AppKit.NSSound. Tested and known to work with MP3 and WAVE on
-    OS X 10.11 with Python 2.7. Probably works with anything QuickTime supports.
-    Probably works on OS X 10.5 and newer. Probably works with all versions of
-    Python.
-
-    Inspired by (but not copied from) Aaron's Stack Overflow answer here:
-    http://stackoverflow.com/a/34568298/901641
-
-    I never would have tried using AppKit.NSSound without seeing his code.
-    """
-    try:
-        from AppKit import NSSound
-    except ImportError:
-        logger.warning("playsound could not find a copy of AppKit - falling back to using macOS's system copy.")
-        sys.path.append("/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python/PyObjC")
-        from AppKit import NSSound
-
-    from time import sleep
-
-    from Foundation import NSURL
-
-    sound = _handlePathOSX(sound)
-    url = NSURL.URLWithString_(sound)
-    if not url:
-        raise PlaysoundException("Cannot find a sound with filename: " + sound)
-
-    for i in range(5):
-        nssound = NSSound.alloc().initWithContentsOfURL_byReference_(url, True)
-        if nssound:
-            break
-        else:
-            logger.debug("Failed to load sound, although url was good... " + sound)
-    else:
-        raise PlaysoundException("Could not load sound with filename, although URL was good... " + sound)
-    nssound.play()
-
-    if block:
-        sleep(nssound.duration())
+# def _playsoundOSX(sound, block):
+#     """
+#     Utilizes AppKit.NSSound. Tested and known to work with MP3 and WAVE on
+#     OS X 10.11 with Python 2.7. Probably works with anything QuickTime supports.
+#     Probably works on OS X 10.5 and newer. Probably works with all versions of
+#     Python.
+#
+#     Inspired by (but not copied from) Aaron's Stack Overflow answer here:
+#     http://stackoverflow.com/a/34568298/901641
+#
+#     I never would have tried using AppKit.NSSound without seeing his code.
+#     """
+#     try:
+#         from AppKit import NSSound
+#     except ImportError:
+#         raise ImportError("playsound on OSX requires AppKit. Install PyObjC.")
+#
+#     from time import sleep
+#
+#     from Foundation import NSURL
+#
+#     sound = _handlePathOSX(sound)
+#     url = NSURL.URLWithString_(sound)
+#     if not url:
+#         raise PlaysoundException("Cannot find a sound with filename: " + sound)
+#
+#     for i in range(5):
+#         nssound = NSSound.alloc().initWithContentsOfURL_byReference_(url, True)
+#         if nssound:
+#             break
+#         else:
+#             logger.debug("Failed to load sound, although url was good... " + sound)
+#     else:
+#         raise PlaysoundException("Could not load sound with filename, although URL was good... " + sound)
+#     nssound.play()
+#
+#     if block:
+#         sleep(nssound.duration())
 
 
 def _playsoundNix(sound, block):
@@ -151,13 +173,6 @@ def _playsoundNix(sound, block):
     sound = _canonicalizePath(sound)
 
     # pathname2url escapes non-URL-safe characters
-    from os.path import abspath, exists
-
-    try:
-        from urllib.request import pathname2url
-    except ImportError:
-        # python 2
-        from urllib import pathname2url
 
     import gi
 
@@ -170,8 +185,8 @@ def _playsoundNix(sound, block):
     if sound.startswith(("http://", "https://")):
         playbin.props.uri = sound
     else:
-        path = abspath(sound)
-        if not exists(path):
+        path = os.path.abspath(sound)
+        if not os.path.exists(path):
             raise PlaysoundException("File not found: {}".format(path))
         playbin.props.uri = "file://" + pathname2url(path)
 
@@ -192,79 +207,10 @@ def _playsoundNix(sound, block):
     logger.debug("Finishing play")
 
 
-def _playsoundAnotherPython(otherPython, sound, block, macOS=False):
-    """
-    Mostly written so that when this is run on python3 on macOS, it can invoke
-    python2 on macOS... but maybe this idea could be useful on linux, too.
-    """
-    from inspect import getsourcefile
-    from os.path import abspath, exists
-    from subprocess import check_call
-    from threading import Thread
-
-    sound = _canonicalizePath(sound)
-
-    class PropogatingThread(Thread):
-        def run(self):
-            self.exc = None
-            try:
-                self.ret = self._target(*self._args, **self._kwargs)
-            except BaseException as e:
-                self.exc = e
-
-        def join(self, timeout=None):
-            super().join(timeout)
-            if self.exc:
-                raise self.exc
-            return self.ret
-
-    # Check if the file exists...
-    if not exists(abspath(sound)):
-        raise PlaysoundException("Cannot find a sound with filename: " + sound)
-
-    playsoundPath = abspath(getsourcefile(lambda: 0))
-    t = PropogatingThread(
-        target=lambda: check_call([otherPython, playsoundPath, _handlePathOSX(sound) if macOS else sound])
-    )
-    t.start()
-    if block:
-        t.join()
-
-
-def playsound(sound, block=True):
-    if SYSTEM == "Windows":
-        playsound = _playsoundWin
-    elif SYSTEM == "Darwin":
-        playsound = _playsoundOSX
-        import sys
-
-        if sys.version_info[0] > 2:
-            try:
-                from AppKit import NSSound
-            except ImportError:
-                logger.warning(
-                    "playsound is relying on a python 2 subprocess. Please use `pip3 install PyObjC` if you want playsound to run more efficiently."
-                )
-                playsound = lambda sound, block=True: _playsoundAnotherPython(
-                    "/System/Library/Frameworks/Python.framework/Versions/2.7/bin/python", sound, block, macOS=True
-                )
-    else:
-        playsound = _playsoundNix
-        if __name__ != "__main__":  # Ensure we don't infinitely recurse trying to get another python instance.
-            try:
-                import gi
-
-                gi.require_version("Gst", "1.0")
-                from gi.repository import Gst
-            except:
-                logger.warning(
-                    "playsound is relying on another python subprocess. Please use `pip install pygobject` if you want playsound to run more efficiently."
-                )
-                playsound = lambda sound, block=True: _playsoundAnotherPython("/usr/bin/python3", sound, block, macOS=False)
-
+# Initialize the module-level playsound variable after all variables have been initialize
+_initialize_playsound()
 
 if __name__ == "__main__":
-    # block is always True if you choose to run this from the command line.
-    from sys import argv
-
-    playsound(argv[1])
+    playsound("test_media/Damonte.mp3", block=True)
+    # playsound("test_media/Damonte.mp3", block=False)
+    playsound("test_media/Damonte.mp3", block=True)

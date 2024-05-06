@@ -3,11 +3,14 @@ from inspect import getsource
 from os.path import abspath, dirname, join
 
 from setuptools import setup
+from pathlib import Path
 
-here = abspath(dirname(getsource(lambda: 0)))
 
-with open(join(here, "README.rst"), encoding="utf-8") as f:
-    long_description = f.read()
+def package_relative_path(path):
+    return Path(__file__).parent / path
+
+
+long_description = package_relative_path("README.md").read_text(encoding="UTF-8")
 
 setup(
     name="playsound2",
@@ -34,5 +37,7 @@ setup(
         "Topic :: Multimedia :: Sound/Audio :: Players :: MP3",
     ],
     keywords="sound playsound music wave wav mp3 media song play audio",
-    py_modules=["playsound2"],
+    packages=["playsound2"],
+    python_requires=">=3.7",
+    install_requires=[],
 )
