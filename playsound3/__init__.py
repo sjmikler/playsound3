@@ -1,1 +1,1 @@
-from playsound3.playsound2 import playsound
+from playsound3.playsound3 import playsound
