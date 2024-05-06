@@ -18,7 +18,7 @@ class PlaysoundException(Exception):
 
 
 def playsound(sound: os.PathLike, block: bool = True) -> None:
-    """Play a sound using the default audio player of the system.
+    """Play a sound file using an audio player availabile on your system.
 
     Args:
         sound: Path to the sound file.
