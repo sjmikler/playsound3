@@ -1,4 +1,4 @@
-> This repository was initially forked from [TaylorSMarks/playsound](https://github.com/TaylorSMarks/playsound/blob/master/playsound.py)
+> This repository was initially forked from [TaylorSMarks/playsound](https://github.com/TaylorSMarks/playsound)
 
 # Playsound3
 
