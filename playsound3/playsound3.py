@@ -17,7 +17,13 @@ class PlaysoundException(Exception):
     pass
 
 
-def playsound(sound, block=True):
+def playsound(sound: os.PathLike, block: bool = True) -> None:
+    """Play a sound using the default audio player of the system.
+
+    Args:
+        sound: Path to the sound file.
+        block: If True, the function will block execution until the sound finishes playing.
+    """
     sound = _prepare_path(sound)
 
     if SYSTEM == "Linux":

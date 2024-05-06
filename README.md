@@ -1,35 +1,42 @@
-> Note: this repository is an attempt to fix playsound library
+> This repository was initially forked from [TaylorSMarks/playsound](https://github.com/TaylorSMarks/playsound/blob/master/playsound.py)
 
-playsound
-------------
+## Installation
 
-Pure Python, cross platform, single function module with no dependencies for playing sounds.
-
-Installation
-------------
 Install via pip:
 
 ```
-pip install playsound
+pip install playsound3
 ```
 
-Quick Start
------------
-Once you've installed, you can really quickly verified that it works with just this:
+## Quick Start
+
+Once installed, you can use the playsound function to play sound files:
 
 ```python
-from playsound2 import playsound
+from playsound3 import playsound
 
-playsound('/path/to/a/sound/file/you/want/to/play.mp3') 
+playsound("/path/to/sound/file.mp3")
 ```
 
-Documentation
--------------
-The playsound module contains only one thing - the function (also named) playsound.
+## Documentation
+
+The playsound module contains only one thing - the function (also named) playsound:
+
+```python
+def playsound(sound: os.PathLike, block: bool = True) -> None:
+    """Play a sound using the default audio player of the system.
+
+    Args:
+        sound: Path to the sound file.
+        block: If True, the function will block execution until the sound finishes playing.
+    """
+```
 
 It requires one argument - the path to the file with the sound you'd like to play. This may be a local file, or a URL.
 There's an optional second argument, block, which is set to True by default. Setting it to False makes the function run asynchronously.
 
-On Windows, uses windll.winmm. WAVE and MP3 have been tested and are known to work. Other file formats may work as well.
-On OS X, uses AppKit.NSSound. WAVE and MP3 have been tested and are known to work. In general, anything QuickTime can play, playsound should be able to play, for OS X.
-On Linux, uses GStreamer. Known to work on Ubuntu 14.04 and ElementaryOS Loki. I expect any Linux distro with a standard gnome desktop experience should work.
+## Supported systems
+
+* Linux, using GStreamer (built-in on Linux distributions)
+* Windows, using windll.winmm (built-in on Windows)
+* OS X using afplay utility (built-in OS X)
