@@ -1,14 +1,13 @@
 import atexit
 import ctypes
 import logging
-import os
 import platform
 import subprocess
-import uuid
 import tempfile
+import urllib.request
+import uuid
 from pathlib import Path
 from threading import Thread
-import urllib.request
 
 logger = logging.getLogger(__name__)
 
