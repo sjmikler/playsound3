@@ -1,31 +1,27 @@
+> Note: this repository is an attempt to fix playsound library
+
 playsound
-=========
-*Pure Python, cross platform, single function module with no dependencies for playing sounds.*
+------------
+
+Pure Python, cross platform, single function module with no dependencies for playing sounds.
 
 Installation
 ------------
 Install via pip:
 
-.. code-block:: bash
-
-    $ pip install playsound
-
-Done.
-
-If you insist on the (slightly) harder way of installing, from source,
-you know how to do it already and don't need my help.
-
-The latest version of the source code can be found at:
-https://github.com/TaylorSMarks/playsound
+```
+pip install playsound
+```
 
 Quick Start
 -----------
 Once you've installed, you can really quickly verified that it works with just this:
 
-.. code-block:: python
+```python
+from playsound import playsound
 
-    >>> from playsound import playsound
-    >>> playsound('/path/to/a/sound/file/you/want/to/play.mp3') 
+playsound('/path/to/a/sound/file/you/want/to/play.mp3') 
+```
 
 Documentation
 -------------
@@ -51,6 +47,10 @@ You can check the Travis-CI status for Playsound here: https://travis-ci.com/git
 
 Copyright
 ---------
-This software is Copyright (c) 2021 Taylor Marks <taylor@marksfam.com>.
+
+```
+Copyright (c) 2021 Taylor Marks <taylor@marksfam.com>
+Copyright (c) 2024 Szymon Mikler <sjmikler@gmail.com>
+```
 
 See the bundled LICENSE file for more information.
