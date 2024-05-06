@@ -2,6 +2,8 @@ import os
 import logging
 from urllib.request import pathname2url
 from platform import system
+from threading import Thread
+import random
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +18,7 @@ def playsound(sound, block=False):
     if SYSTEM == "Linux":
         _playsound_gstreamer(sound, block)
     elif SYSTEM == "Windows":
-        _playsound_windll(sound, block)
+        _playsound_winmm(sound, block)
     else:
         raise PlaysoundException(f"Platform '{SYSTEM}' is not supported")
 
@@ -58,45 +60,34 @@ def _playsound_gstreamer(sound, block):
     logger.debug("gstreamer: finishing play %s", sound)
 
 
-def _playsound_windll(sound, block):
+def _playsound_winmm(sound, block):
     """Play a sound utilizing windll.winmm
 
     Inspired by
     https://github.com/michaelgundlach/mp3play
     """
-    from ctypes import create_unicode_buffer, windll, wintypes
-
-    windll.winmm.mciSendStringW.argtypes = [wintypes.LPCWSTR, wintypes.LPWSTR, wintypes.UINT, wintypes.HANDLE]
-    windll.winmm.mciGetErrorStringW.argtypes = [wintypes.DWORD, wintypes.LPWSTR, wintypes.UINT]
-
-    def winCommand(*command):
-        bufLen = 600
-        buf = create_unicode_buffer(bufLen)
-        command = " ".join(command)
-
-        # use widestring version of the function
-        errorCode = int(windll.winmm.mciSendStringW(command, buf, bufLen - 1, 0))
-        if errorCode:
-            errorBuffer = create_unicode_buffer(bufLen)
-
-            # use widestring version of the function
-            windll.winmm.mciGetErrorStringW(errorCode, errorBuffer, bufLen - 1)
-            raise PlaysoundException(f"Error {errorCode} for command {command}, {errorBuffer.value}")
-        return buf.value
-
-    try:
-        logger.debug("windll: starting playing %s", sound)
-        winCommand(f"open {sound}")
-        wait_cmd = " wait" if block else ""
-        winCommand(f"play {sound}{wait_cmd}")
-        logger.debug("windll: finished playing %s", sound)
-    finally:
-        try:
-            winCommand(f"close {sound}")
-        except PlaysoundException:
-            logger.warning("Failed to close the file: %s", sound)
-            # If it fails, there's nothing more that can be done...
-            pass
+    if block is False:
+        thread = Thread(target=_playsound_winmm, args=(sound, True))
+        thread.start()
+        return
+    
+    import ctypes
+    
+    # Load the winmm library
+    winmm = ctypes.WinDLL('winmm.dll')
+    
+    def mciSendString(command):
+        buffer = ctypes.create_string_buffer(255)
+        error_code = winmm.mciSendStringA(ctypes.c_char_p(command.encode()), buffer, 254, 0)
+        if error_code:
+            print("Error code:", error_code)
+        return buffer.value
+    
+    # Play a sound
+    alias = f"alias"
+    mciSendString(f"open \"{sound}\" type mpegvideo alias {alias}")
+    mciSendString(f"play {alias} wait")
+    mciSendString(f"close {alias}")
 
 
 if __name__ == "__main__":
