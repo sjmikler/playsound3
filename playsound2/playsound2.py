@@ -1,6 +1,9 @@
 import logging
+from platform import system
 
 logger = logging.getLogger(__name__)
+
+SYSTEM = system()
 
 
 class PlaysoundException(Exception):
@@ -21,7 +24,7 @@ def _canonicalizePath(path):
         return path
 
 
-def _playsoundWin(sound, block=True):
+def _playsoundWin(sound, block):
     """
     Utilizes windll.winmm. Tested and known to work with MP3 and WAVE on
     Windows 7 with Python 2.7. Probably works with more file formats.
@@ -36,7 +39,6 @@ def _playsoundWin(sound, block=True):
     sound = '"' + _canonicalizePath(sound) + '"'
 
     from ctypes import create_unicode_buffer, windll, wintypes
-    from time import sleep
 
     windll.winmm.mciSendStringW.argtypes = [wintypes.LPCWSTR, wintypes.LPWSTR, wintypes.UINT, wintypes.HANDLE]
     windll.winmm.mciGetErrorStringW.argtypes = [wintypes.DWORD, wintypes.LPWSTR, wintypes.UINT]
@@ -98,7 +100,7 @@ def _handlePathOSX(sound):
         return parts[0] + "://" + quote(parts[1].encode("utf-8")).replace(" ", "%20")
 
 
-def _playsoundOSX(sound, block=True):
+def _playsoundOSX(sound, block):
     """
     Utilizes AppKit.NSSound. Tested and known to work with MP3 and WAVE on
     OS X 10.11 with Python 2.7. Probably works with anything QuickTime supports.
@@ -140,7 +142,7 @@ def _playsoundOSX(sound, block=True):
         sleep(nssound.duration())
 
 
-def _playsoundNix(sound, block=True):
+def _playsoundNix(sound, block):
     """Play a sound using GStreamer.
 
     Inspired by this:
@@ -190,7 +192,7 @@ def _playsoundNix(sound, block=True):
     logger.debug("Finishing play")
 
 
-def _playsoundAnotherPython(otherPython, sound, block=True, macOS=False):
+def _playsoundAnotherPython(otherPython, sound, block, macOS=False):
     """
     Mostly written so that when this is run on python3 on macOS, it can invoke
     python2 on macOS... but maybe this idea could be useful on linux, too.
@@ -229,41 +231,37 @@ def _playsoundAnotherPython(otherPython, sound, block=True, macOS=False):
         t.join()
 
 
-from platform import system
+def playsound(sound, block=True):
+    if SYSTEM == "Windows":
+        playsound = _playsoundWin
+    elif SYSTEM == "Darwin":
+        playsound = _playsoundOSX
+        import sys
 
-system = system()
+        if sys.version_info[0] > 2:
+            try:
+                from AppKit import NSSound
+            except ImportError:
+                logger.warning(
+                    "playsound is relying on a python 2 subprocess. Please use `pip3 install PyObjC` if you want playsound to run more efficiently."
+                )
+                playsound = lambda sound, block=True: _playsoundAnotherPython(
+                    "/System/Library/Frameworks/Python.framework/Versions/2.7/bin/python", sound, block, macOS=True
+                )
+    else:
+        playsound = _playsoundNix
+        if __name__ != "__main__":  # Ensure we don't infinitely recurse trying to get another python instance.
+            try:
+                import gi
 
-if system == "Windows":
-    playsound = _playsoundWin
-elif system == "Darwin":
-    playsound = _playsoundOSX
-    import sys
+                gi.require_version("Gst", "1.0")
+                from gi.repository import Gst
+            except:
+                logger.warning(
+                    "playsound is relying on another python subprocess. Please use `pip install pygobject` if you want playsound to run more efficiently."
+                )
+                playsound = lambda sound, block=True: _playsoundAnotherPython("/usr/bin/python3", sound, block, macOS=False)
 
-    if sys.version_info[0] > 2:
-        try:
-            from AppKit import NSSound
-        except ImportError:
-            logger.warning(
-                "playsound is relying on a python 2 subprocess. Please use `pip3 install PyObjC` if you want playsound to run more efficiently."
-            )
-            playsound = lambda sound, block=True: _playsoundAnotherPython(
-                "/System/Library/Frameworks/Python.framework/Versions/2.7/bin/python", sound, block, macOS=True
-            )
-else:
-    playsound = _playsoundNix
-    if __name__ != "__main__":  # Ensure we don't infinitely recurse trying to get another python instance.
-        try:
-            import gi
-
-            gi.require_version("Gst", "1.0")
-            from gi.repository import Gst
-        except:
-            logger.warning(
-                "playsound is relying on another python subprocess. Please use `pip install pygobject` if you want playsound to run more efficiently."
-            )
-            playsound = lambda sound, block=True: _playsoundAnotherPython("/usr/bin/python3", sound, block, macOS=False)
-
-del system
 
 if __name__ == "__main__":
     # block is always True if you choose to run this from the command line.

@@ -35,7 +35,7 @@ if isTravis and system == "Windows":
 
 import unittest
 
-from playsound import PlaysoundException, playsound
+from playsound2 import PlaysoundException, playsound
 
 durationMarginLow = 0.2
 duratingMarginHigh = 2.0
@@ -120,7 +120,6 @@ else:
     class PlaysoundTestsWithPathlib(PlaysoundTests):
         def get_full_path(self, file):
             return Path("test_media") / file
-
 
 if __name__ == "__main__":
     print(version)

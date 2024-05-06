@@ -18,7 +18,7 @@ Quick Start
 Once you've installed, you can really quickly verified that it works with just this:
 
 ```python
-from playsound import playsound
+from playsound2 import playsound
 
 playsound('/path/to/a/sound/file/you/want/to/play.mp3') 
 ```
