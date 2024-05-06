@@ -37,8 +37,10 @@ def playsound(sound: os.PathLike, block: bool = True) -> None:
     """
 ```
 
-It requires one argument - the path to the file with the sound you'd like to play. This may be a local file, or a URL.
-There's an optional second argument, block, which is set to True by default. Setting it to False makes the function run asynchronously.
+It requires one argument - the path to the file with the sound you'd like to play.
+This should be a local file.
+There's an optional second argument, block, which is set to True by default.
+Setting it to False makes the function run asynchronously.
 
 ## Supported systems
 
