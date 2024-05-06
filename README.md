@@ -33,14 +33,3 @@ There's an optional second argument, block, which is set to True by default. Set
 On Windows, uses windll.winmm. WAVE and MP3 have been tested and are known to work. Other file formats may work as well.
 On OS X, uses AppKit.NSSound. WAVE and MP3 have been tested and are known to work. In general, anything QuickTime can play, playsound should be able to play, for OS X.
 On Linux, uses GStreamer. Known to work on Ubuntu 14.04 and ElementaryOS Loki. I expect any Linux distro with a standard gnome desktop experience should work.
-
-
-Copyright
----------
-
-```
-Copyright (c) 2021 Taylor Marks <taylor@marksfam.com>
-Copyright (c) 2024 Szymon Mikler <sjmikler@gmail.com>
-```
-
-See the bundled LICENSE file for more information.
