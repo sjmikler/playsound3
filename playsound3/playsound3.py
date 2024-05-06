@@ -1,16 +1,16 @@
 import ctypes
 import logging
 import os
+import platform
 import subprocess
 import uuid
 from pathlib import Path
-from platform import system
 from threading import Thread
 from urllib.request import pathname2url
 
 logger = logging.getLogger(__name__)
 
-SYSTEM = system()
+SYSTEM = platform.system()
 
 
 class PlaysoundException(Exception):
