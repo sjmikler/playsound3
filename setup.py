@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 from pathlib import Path
 
 
@@ -9,7 +9,7 @@ def package_relative_path(path):
 long_description = package_relative_path("README.md").read_text(encoding="UTF-8")
 
 setup(
-    name="playsound2",
+    name="playsound3",
     version="2.0.0-alpha",
     description=long_description,
     long_description=long_description,
@@ -31,7 +31,7 @@ setup(
         "Topic :: Multimedia :: Sound/Audio :: Players :: MP3",
     ],
     keywords="sound playsound music wave wav mp3 media song play audio",
-    packages=["playsound2"],
+    packages=find_packages(),
     python_requires=">=3.7",
     install_requires=[
         "pygobject; platform_system=='Linux'",

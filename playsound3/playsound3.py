@@ -29,8 +29,10 @@ def _playsound_gstreamer(sound, block):
     """
     import gi
 
-    gi.require_version("Gst", "1.0")  # Silences gi warning
+    # Silences gi warning
+    gi.require_version("Gst", "1.0")
 
+    # GStreamer is included in all Linux distributions
     from gi.repository import Gst
 
     Gst.init(None)
