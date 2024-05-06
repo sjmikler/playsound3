@@ -44,4 +44,4 @@ There's an optional second argument, block, which is set to True by default. Set
 
 * Linux, using GStreamer (built-in on Linux distributions)
 * Windows, using windll.winmm (built-in on Windows)
-* OS X using afplay utility (built-in OS X)
+* OS X, using afplay utility (built-in OS X)
