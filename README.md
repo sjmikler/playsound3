@@ -46,4 +46,4 @@ Setting it to False makes the function run asynchronously.
 
 * Linux, using GStreamer (built-in on Linux distributions)
 * Windows, using windll.winmm (built-in on Windows)
-* OS X, using afplay utility (built-in OS X)
+* OS X, using afplay utility (built-in on OS X)
