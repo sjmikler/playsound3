@@ -1,16 +1,19 @@
+import atexit
 import ctypes
 import logging
 import os
 import platform
 import subprocess
 import uuid
+import tempfile
 from pathlib import Path
 from threading import Thread
-from urllib.request import pathname2url
+import urllib.request
 
 logger = logging.getLogger(__name__)
 
 SYSTEM = platform.system()
+DOWNLOAD_CACHE = dict()
 
 
 class PlaysoundException(Exception):
@@ -18,7 +21,7 @@ class PlaysoundException(Exception):
 
 
 def playsound(sound, block: bool = True) -> None:
-    """Play a sound file using an audio player availabile on your system.
+    """Play a sound file using an audio backend availabile in your system.
 
     Args:
         sound: Path to the sound file. Can be either an str or pathlib.Path.
@@ -38,26 +41,30 @@ def playsound(sound, block: bool = True) -> None:
     if block:
         func(sound)
     else:
-        t = Thread(target=func, args=(sound,)).start()
+        t = Thread(target=func, args=(sound,), daemon=True).start()
 
 
 def _prepare_path(sound):
+    if sound.startswith(("http://", "https://")):
+        # To play file from URL, we download the file first to a temporary location
+        if sound not in DOWNLOAD_CACHE:
+            with tempfile.NamedTemporaryFile(delete=False, prefix="playsound3-") as f:
+                urllib.request.urlretrieve(sound, f.name)
+                DOWNLOAD_CACHE[sound] = f.name
+        sound = DOWNLOAD_CACHE[sound]
+
     path = Path(sound)
 
     if not path.exists():
         raise PlaysoundException(f"File not found: {sound}")
-
     return path.absolute().as_posix()
 
 
 def _playsound_gstreamer(sound):
     """Play a sound using gstreamer (built-in Linux)."""
 
-    if not sound.startswith(("http://", "https://", "file://")):
-        path = os.path.abspath(sound)
-        if not os.path.exists(path):
-            raise PlaysoundException(f"File not found: {path}")
-        sound = "file://" + pathname2url(path)
+    if not sound.startswith("file://"):
+        sound = "file://" + urllib.request.pathname2url(sound)
 
     import gi
 
@@ -113,3 +120,14 @@ def _playsound_afplay(sound):
     except subprocess.CalledProcessError as e:
         raise PlaysoundException(f"afplay failed to play sound: {e}")
     logger.debug("afplay: finishing play %s", sound)
+
+
+def _remove_cached_files(cache):
+    """Remove all files saved in the cache when the program ends."""
+    import os
+
+    for path in cache.values():
+        os.remove(path)
+
+
+atexit.register(_remove_cached_files, DOWNLOAD_CACHE)

@@ -1,4 +1,4 @@
-> This repository was initially forked from [TaylorSMarks/playsound](https://github.com/TaylorSMarks/playsound)
+> This repository was forked from [TaylorSMarks/playsound](https://github.com/TaylorSMarks/playsound)
 
 # playsound3
 
@@ -23,6 +23,9 @@ Once installed, you can use the playsound function to play sound files:
 from playsound3 import playsound
 
 playsound("/path/to/sound/file.mp3")
+
+# or use directly on URLs
+playsound("http://url/to/sound/file.mp3")
 ```
 
 ## Documentation
@@ -31,7 +34,7 @@ The playsound module contains only one thing - the function (also named) playsou
 
 ```python
 def playsound(sound, block: bool = True) -> None:
-    """Play a sound file using an audio player availabile on your system.
+    """Play a sound file using an audio backend availabile in your system.
 
     Args:
         sound: Path to the sound file. Can be either an str or pathlib.Path.
@@ -40,7 +43,7 @@ def playsound(sound, block: bool = True) -> None:
 ```
 
 It requires one argument - the path to the file with the sound you'd like to play.
-This should be a local file.
+This should be a local file or a URL.
 There's an optional second argument, block, which is set to True by default.
 Setting it to False makes the function run asynchronously.
 
