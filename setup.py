@@ -1,7 +1,3 @@
-from codecs import open
-from inspect import getsource
-from os.path import abspath, dirname, join
-
 from setuptools import setup
 from pathlib import Path
 
@@ -15,7 +11,7 @@ long_description = package_relative_path("README.md").read_text(encoding="UTF-8"
 setup(
     name="playsound2",
     version="2.0.0-alpha",
-    description=long_description.splitlines()[2][1:-1],
+    description=long_description,
     long_description=long_description,
     url="https://github.com/sjmikler/playsound2",
     author="Szymon Mikler",
@@ -26,8 +22,6 @@ setup(
         "Operating System :: OS Independent",
         "Intended Audience :: Developers",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
@@ -39,5 +33,7 @@ setup(
     keywords="sound playsound music wave wav mp3 media song play audio",
     packages=["playsound2"],
     python_requires=">=3.7",
-    install_requires=[],
+    install_requires=[
+        "pygobject; platform_system=='Linux'",
+    ],
 )
