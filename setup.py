@@ -13,7 +13,7 @@ setup(
     version="2.0.0-alpha",
     description=long_description,
     long_description=long_description,
-    url="https://github.com/sjmikler/playsound2",
+    url="https://github.com/sjmikler/playsound3",
     author="Szymon Mikler",
     author_email="sjmikler@gmail.com",
     license="MIT",
