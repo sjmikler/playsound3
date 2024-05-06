@@ -13,15 +13,26 @@ class PlaysoundException(Exception):
 
 
 def playsound(sound, block=False):
+    if SYSTEM == "Linux":
+        _playsound_gstreamer(sound, block)
+    elif SYSTEM == "Windows":
+        _playsound_windll(sound, block)
+    else:
+        raise PlaysoundException(f"Platform '{SYSTEM}' is not supported")
+
+
+def _playsound_gstreamer(sound, block):
     """Play a sound using GStreamer.
 
-    Inspired by this:
+    Inspired by:
     https://gstreamer.freedesktop.org/documentation/tutorials/playback/playbin-usage.html
     """
     import gi
-    gi.require_version('Gst', '1.0')  # Silences gi warning
+
+    gi.require_version("Gst", "1.0")  # Silences gi warning
 
     from gi.repository import Gst
+
     Gst.init(None)
 
     playbin = Gst.ElementFactory.make("playbin", "playbin")
@@ -32,7 +43,7 @@ def playsound(sound, block=False):
         sound = "file://" + pathname2url(path)
     playbin.props.uri = sound
 
-    logger.debug("Starting playing %s", sound)
+    logger.debug("gstreamer: starting playing %s", sound)
     set_result = playbin.set_state(Gst.State.PLAYING)
     if set_result != Gst.StateChangeReturn.ASYNC:
         raise PlaysoundException("playbin.set_state returned " + repr(set_result))
@@ -42,10 +53,49 @@ def playsound(sound, block=False):
             bus.poll(Gst.MessageType.EOS, Gst.CLOCK_TIME_NONE)
         finally:
             playbin.set_state(Gst.State.NULL)
-    logger.debug("Finishing play %s", sound)
+    logger.debug("gstreamer: finishing play %s", sound)
+
+
+def _playsound_windll(sound, block):
+    """Play a sound utilizing windll.winmm
+
+    Inspired by
+    https://github.com/michaelgundlach/mp3play
+    """
+    from ctypes import create_unicode_buffer, windll, wintypes
+
+    windll.winmm.mciSendStringW.argtypes = [wintypes.LPCWSTR, wintypes.LPWSTR, wintypes.UINT, wintypes.HANDLE]
+    windll.winmm.mciGetErrorStringW.argtypes = [wintypes.DWORD, wintypes.LPWSTR, wintypes.UINT]
+
+    def winCommand(*command):
+        bufLen = 600
+        buf = create_unicode_buffer(bufLen)
+        command = " ".join(command)
+
+        # use widestring version of the function
+        errorCode = int(windll.winmm.mciSendStringW(command, buf, bufLen - 1, 0))
+        if errorCode:
+            errorBuffer = create_unicode_buffer(bufLen)
+
+            # use widestring version of the function
+            windll.winmm.mciGetErrorStringW(errorCode, errorBuffer, bufLen - 1)
+            raise PlaysoundException(f"Error {errorCode} for command {command}, {errorBuffer.value}")
+        return buf.value
+
+    try:
+        logger.debug("windll: starting playing %s", sound)
+        winCommand(f"open {sound}")
+        wait_cmd = " wait" if block else ""
+        winCommand(f"play {sound}{wait_cmd}")
+        logger.debug("windll: finished playing %s", sound)
+    finally:
+        try:
+            winCommand(f"close {sound}")
+        except PlaysoundException:
+            logger.warning("Failed to close the file: %s", sound)
+            # If it fails, there's nothing more that can be done...
+            pass
 
 
 if __name__ == "__main__":
-    playsound("test_media/Damonte.mp3", block=True)
-    # playsound("test_media/Damonte.mp3", block=False)
     playsound("test_media/Damonte.mp3", block=True)
