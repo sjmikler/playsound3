@@ -17,11 +17,11 @@ class PlaysoundException(Exception):
     pass
 
 
-def playsound(sound: os.PathLike, block: bool = True) -> None:
+def playsound(sound, block: bool = True) -> None:
     """Play a sound file using an audio player availabile on your system.
 
     Args:
-        sound: Path to the sound file.
+        sound: Path to the sound file. Can be either an str or pathlib.Path.
         block: If True, the function will block execution until the sound finishes playing.
     """
     sound = _prepare_path(sound)

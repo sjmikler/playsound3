@@ -11,7 +11,7 @@ long_description = package_relative_path("README.md").read_text(encoding="UTF-8"
 
 setup(
     name="playsound3",
-    version="2.0.3",
+    version="2.0.4",
     description="Cross-platform library to play audio files",
     url="https://github.com/sjmikler/playsound3",
     author="Szymon Mikler",

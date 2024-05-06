@@ -28,11 +28,11 @@ playsound("/path/to/sound/file.mp3")
 The playsound module contains only one thing - the function (also named) playsound:
 
 ```python
-def playsound(sound: os.PathLike, block: bool = True) -> None:
+def playsound(sound, block: bool = True) -> None:
     """Play a sound file using an audio player availabile on your system.
 
     Args:
-        sound: Path to the sound file.
+        sound: Path to the sound file. Can be either an str or pathlib.Path.
         block: If True, the function will block execution until the sound finishes playing.
     """
 ```
