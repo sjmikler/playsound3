@@ -34,7 +34,7 @@ def playsound(sound, block: bool = True, backend: Union[str, None] = None) -> No
         sound: Path or URL to the sound file. Can be a string or pathlib.Path.
         block: If True, the function will block execution until the sound finishes playing.
                If False, sound will play in a background thread.
-        backend: Name of the audio backend to use. Use None to select automatically.
+        backend: Name of the audio backend to use. Use None for automatic selection.
     """
     if backend is None:
         _play = _PLAYSOUND_DEFAULT_BACKEND
