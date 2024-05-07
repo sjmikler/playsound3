@@ -43,12 +43,20 @@ def playsound(sound, block: bool = True) -> None:
         t = Thread(target=func, args=(sound,), daemon=True).start()
 
 
+def _download_sound_from_web(link, destination):
+    # Identifies itself as a browser to avoid HTTP 403 errors
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64)"}
+    request = urllib.request.Request(link, headers=headers)
+    with urllib.request.urlopen(request) as response, open(destination, "wb") as out_file:
+        out_file.write(response.read())
+
+
 def _prepare_path(sound):
     if sound.startswith(("http://", "https://")):
-        # To play file from URL, we download the file first to a temporary location
+        # To play file from URL, we download the file first to a temporary location and cache it
         if sound not in DOWNLOAD_CACHE:
             with tempfile.NamedTemporaryFile(delete=False, prefix="playsound3-") as f:
-                urllib.request.urlretrieve(sound, f.name)
+                _download_sound_from_web(sound, f.name)
                 DOWNLOAD_CACHE[sound] = f.name
         sound = DOWNLOAD_CACHE[sound]
 
