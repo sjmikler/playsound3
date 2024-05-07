@@ -33,10 +33,7 @@ classifiers = [
     "Topic :: Multimedia :: Sound/Audio :: Players :: MP3",
     "Operating System :: OS Independent",
 ]
-dependencies = [
-    "certifi",
-    "pygobject; platform_system=='Linux'",
-]
+dependencies = ["certifi"]
 
 [project.urls]
 Repository = "https://github.com/sjmikler/playsound3"
