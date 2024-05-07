@@ -1,7 +1,7 @@
 name: Install locally and run pytest on Windows
 
-# This test fails on Windows device without audio devices
-# We don't run it automatically
+# This test fails on windows server without audio devices
+# So we don't run it automatically
 
 on:
   workflow_dispatch:
