@@ -5,6 +5,7 @@ import platform
 import subprocess
 import tempfile
 import urllib.request
+import urllib.error
 import uuid
 from pathlib import Path
 from threading import Thread
@@ -47,8 +48,21 @@ def _download_sound_from_web(link, destination):
     # Identifies itself as a browser to avoid HTTP 403 errors
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64)"}
     request = urllib.request.Request(link, headers=headers)
-    with urllib.request.urlopen(request) as response, open(destination, "wb") as out_file:
-        out_file.write(response.read())
+
+    try:
+        import ssl
+        import certifi
+
+        context = ssl.create_default_context(cafile=certifi.where())
+    except ImportError:
+        context = None
+
+    try:
+        with urllib.request.urlopen(request, context=context) as response, open(destination, "wb") as out_file:
+            out_file.write(response.read())
+    except urllib.error.HTTPError as e:
+        msg = f"Failed to download sound from {link}: {e}\nTry running 'pip install certifi'"
+        raise PlaysoundException(msg)
 
 
 def _prepare_path(sound):
