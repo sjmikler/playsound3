@@ -34,9 +34,9 @@ def playsound(sound, block: bool = True) -> None:
     sound = _prepare_path(sound)
 
     if SYSTEM == "Linux":
-        func = _playsound_gstreamer2
+        func = _playsound_gst_play
     elif SYSTEM == "Windows":
-        func = _playsound_winmm
+        func = _playsound_mci_winmm
     elif SYSTEM == "Darwin":
         func = _playsound_afplay
     else:
@@ -73,7 +73,17 @@ def _prepare_path(sound):
     return path.absolute().as_posix()
 
 
-def _playsound_gstreamer(sound):
+def _playsound_gst_play(sound):
+    """Uses gst-play-1.0 utility (built-in Linux)."""
+    logger.debug("gst-play-1.0: starting playing %s", sound)
+    try:
+        subprocess.run(["gst-play-1.0", "--no-interactive", "--quiet", sound], check=True)
+    except subprocess.CalledProcessError as e:
+        raise PlaysoundException(f"gst-play-1.0 failed to play sound: {e}")
+    logger.debug("gst-play-1.0: finishing play %s", sound)
+
+
+def _playsound_gstreamer_legacy(sound):
     """Play a sound using gstreamer (built-in Linux)."""
 
     if not sound.startswith("file://"):
@@ -104,16 +114,6 @@ def _playsound_gstreamer(sound):
     logger.debug("gstreamer: finishing play %s", sound)
 
 
-def _playsound_gstreamer2(sound):
-    """Uses gst-play-1.0 utility (built-in Linux)."""
-    logger.debug("gst-play-1.0: starting playing %s", sound)
-    try:
-        subprocess.run(["gst-play-1.0", "--no-interactive", "--quiet", sound], check=True)
-    except subprocess.CalledProcessError as e:
-        raise PlaysoundException(f"gst-play-1.0 failed to play sound: {e}")
-    logger.debug("gst-play-1.0: finishing play %s", sound)
-
-
 def _send_winmm_mci_command(command):
     winmm = ctypes.WinDLL("winmm.dll")
     buffer = ctypes.create_string_buffer(255)
@@ -123,7 +123,7 @@ def _send_winmm_mci_command(command):
     return buffer.value
 
 
-def _playsound_winmm(sound):
+def _playsound_mci_winmm(sound):
     """Play a sound utilizing windll.winmm."""
 
     # Select a unique alias for the sound
