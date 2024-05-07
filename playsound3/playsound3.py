@@ -1,6 +1,7 @@
 import atexit
 import ctypes
 import logging
+import os
 import platform
 import ssl
 import subprocess
@@ -13,6 +14,7 @@ from threading import Thread
 
 import certifi
 
+logging.basicConfig(level=os.environ.get("LOGLEVEL", "WARNING"))
 logger = logging.getLogger(__name__)
 
 SYSTEM = platform.system()
