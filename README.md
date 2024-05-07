@@ -1,5 +1,3 @@
-> This repository was forked from [TaylorSMarks/playsound](https://github.com/TaylorSMarks/playsound)
-
 # playsound3
 
 [![PyPi version](https://img.shields.io/badge/dynamic/json?label=latest&query=info.version&url=https%3A%2F%2Fpypi.org%2Fpypi%2Fplaysound3%2Fjson)](https://pypi.org/project/playsound3)
