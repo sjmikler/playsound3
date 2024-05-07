@@ -11,43 +11,43 @@ import urllib.request
 import uuid
 from pathlib import Path
 from threading import Thread
+from typing import Callable, Dict, Union
 
 import certifi
 
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "WARNING"))
 logger = logging.getLogger(__name__)
 
-SYSTEM = platform.system()
-DOWNLOAD_CACHE = dict()
+_PLAYSOUND_DEFAULT_BACKEND: Callable[[str], None]
+_SYSTEM = platform.system()
+_DOWNLOAD_CACHE = dict()
 
 
 class PlaysoundException(Exception):
     pass
 
 
-def playsound(sound, block: bool = True) -> None:
+def playsound(sound, block: bool = True, backend: Union[str, None] = None) -> None:
     """Play a sound file using an audio backend availabile in your system.
 
     Args:
         sound: Path or URL to the sound file. Can be a string or pathlib.Path.
         block: If True, the function will block execution until the sound finishes playing.
                If False, sound will play in a background thread.
+        backend: Name of the audio backend to use. Use None for automatic selection.
     """
-    sound = _prepare_path(sound)
-
-    if SYSTEM == "Linux":
-        func = _playsound_gst_play
-    elif SYSTEM == "Windows":
-        func = _playsound_mci_winmm
-    elif SYSTEM == "Darwin":
-        func = _playsound_afplay
+    if backend is None:
+        _play = _PLAYSOUND_DEFAULT_BACKEND
+    elif backend in _BACKEND_MAPPING:
+        _play = _BACKEND_MAPPING[backend]
     else:
-        raise PlaysoundException(f"Platform '{SYSTEM}' is not supported")
+        raise PlaysoundException(f"Unknown backend: {backend}. Available backends: {', '.join(AVAILABLE_BACKENDS)}")
 
+    path = _prepare_path(sound)
     if block:
-        func(sound)
+        _play(path)
     else:
-        Thread(target=func, args=(sound,), daemon=True).start()
+        Thread(target=_play, args=(path,), daemon=True).start()
 
 
 def _download_sound_from_web(link, destination):
@@ -59,14 +59,15 @@ def _download_sound_from_web(link, destination):
         out_file.write(response.read())
 
 
-def _prepare_path(sound):
+def _prepare_path(sound) -> str:
     if sound.startswith(("http://", "https://")):
         # To play file from URL, we download the file first to a temporary location and cache it
-        if sound not in DOWNLOAD_CACHE:
-            with tempfile.NamedTemporaryFile(delete=False, prefix="playsound3-") as f:
+        if sound not in _DOWNLOAD_CACHE:
+            sound_suffix = Path(sound).suffix
+            with tempfile.NamedTemporaryFile(delete=False, prefix="playsound3-", suffix=sound_suffix) as f:
                 _download_sound_from_web(sound, f.name)
-                DOWNLOAD_CACHE[sound] = f.name
-        sound = DOWNLOAD_CACHE[sound]
+                _DOWNLOAD_CACHE[sound] = f.name
+        sound = _DOWNLOAD_CACHE[sound]
 
     path = Path(sound)
 
@@ -75,7 +76,37 @@ def _prepare_path(sound):
     return path.absolute().as_posix()
 
 
-def _playsound_gst_play(sound):
+def _select_linux_backend() -> Callable[[str], None]:
+    """Select the best available audio backend for Linux systems."""
+    logging.info("Selecting the best available audio backend for Linux systems.")
+
+    try:
+        subprocess.run(["gst-play-1.0", "--version"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+        logging.info("Using gst-play-1.0 as the audio backend.")
+        return _playsound_gst_play
+    except FileNotFoundError:
+        pass
+
+    try:
+        subprocess.run(["ffplay", "-version"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+        logging.info("Using ffplay as the audio backend.")
+        return _playsound_ffplay
+    except FileNotFoundError:
+        pass
+
+    try:
+        subprocess.run(["aplay", "--version"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+        subprocess.run(["mpg123", "--version"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+        logging.info("Using aplay and mpg123 as the audio backend.")
+        return _playsound_alsa
+    except FileNotFoundError:
+        pass
+
+    logging.info("No suitable audio backend found.")
+    raise PlaysoundException("No suitable audio backend found. Install gstreamer or ffmpeg!")
+
+
+def _playsound_gst_play(sound: str) -> None:
     """Uses gst-play-1.0 utility (built-in Linux)."""
     logger.debug("gst-play-1.0: starting playing %s", sound)
     try:
@@ -85,19 +116,60 @@ def _playsound_gst_play(sound):
     logger.debug("gst-play-1.0: finishing play %s", sound)
 
 
-def _playsound_gstreamer_legacy(sound):
+def _playsound_ffplay(sound: str) -> None:
+    """Uses ffplay utility (built-in Linux)."""
+    logger.debug("ffplay: starting playing %s", sound)
+    try:
+        subprocess.run(
+            ["ffplay", "-nodisp", "-autoexit", "-loglevel", "quiet", sound],
+            check=True,
+            stdout=subprocess.DEVNULL,  # suppress output as ffplay prints an unwanted newline
+        )
+    except subprocess.CalledProcessError as e:
+        raise PlaysoundException(f"ffplay failed to play sound: {e}")
+    logger.debug("ffplay: finishing play %s", sound)
+
+
+def _playsound_alsa(sound: str) -> None:
+    """Play a sound using alsa and mpg123 (built-in Linux)."""
+    suffix = Path(sound).suffix
+    if suffix == ".wav":
+        logger.debug("alsa: starting playing %s", sound)
+        try:
+            subprocess.run(["aplay", "--quiet", sound], check=True)
+        except subprocess.CalledProcessError as e:
+            raise PlaysoundException(f"aplay failed to play sound: {e}")
+        logger.debug("alsa: finishing play %s", sound)
+    elif suffix == ".mp3":
+        logger.debug("mpg123: starting playing %s", sound)
+        try:
+            subprocess.run(["mpg123", "-q", sound], check=True)
+        except subprocess.CalledProcessError as e:
+            raise PlaysoundException(f"mpg123 failed to play sound: {e}")
+        logger.debug("mpg123: finishing play %s", sound)
+    else:
+        raise PlaysoundException(f"Backend not supported for {suffix} files")
+
+
+def _playsound_gst_legacy(sound: str) -> None:
     """Play a sound using gstreamer (built-in Linux)."""
 
     if not sound.startswith("file://"):
         sound = "file://" + urllib.request.pathname2url(sound)
 
-    import gi
+    try:
+        import gi
+    except ImportError:
+        raise PlaysoundException("PyGObject not found. Run 'pip install pygobject'")
 
     # Silences gi warning
     gi.require_version("Gst", "1.0")
 
-    # GStreamer is included in all Linux distributions
-    from gi.repository import Gst
+    try:
+        # Gst will be available only if GStreamer is installed
+        from gi.repository import Gst
+    except ImportError:
+        raise PlaysoundException("GStreamer not found. Install GStreamer on your system")
 
     Gst.init(None)
 
@@ -125,7 +197,7 @@ def _send_winmm_mci_command(command):
     return buffer.value
 
 
-def _playsound_mci_winmm(sound):
+def _playsound_mci_winmm(sound: str) -> None:
     """Play a sound utilizing windll.winmm."""
 
     # Select a unique alias for the sound
@@ -137,7 +209,7 @@ def _playsound_mci_winmm(sound):
     logger.debug("winmm: finishing play %s", sound)
 
 
-def _playsound_afplay(sound):
+def _playsound_afplay(sound: str) -> None:
     """Uses afplay utility (built-in macOS)."""
     logger.debug("afplay: starting playing %s", sound)
     try:
@@ -147,7 +219,20 @@ def _playsound_afplay(sound):
     logger.debug("afplay: finishing play %s", sound)
 
 
-def _remove_cached_files(cache):
+def _initialize_default_backend() -> None:
+    global _PLAYSOUND_DEFAULT_BACKEND
+
+    if _SYSTEM == "Windows":
+        _PLAYSOUND_DEFAULT_BACKEND = _playsound_mci_winmm
+    elif _SYSTEM == "Darwin":
+        _PLAYSOUND_DEFAULT_BACKEND = _playsound_afplay
+    else:
+        # Linux version serves as the fallback
+        # because tools like gstreamer and ffmpeg could be installed on unrecognized systems
+        _PLAYSOUND_DEFAULT_BACKEND = _select_linux_backend()
+
+
+def _remove_cached_downloads(cache: Dict[str, str]) -> None:
     """Remove all files saved in the cache when the program ends."""
     import os
 
@@ -155,4 +240,20 @@ def _remove_cached_files(cache):
         os.remove(path)
 
 
-atexit.register(_remove_cached_files, DOWNLOAD_CACHE)
+# ######################## #
+# PLAYSOUND INITIALIZATION #
+# ######################## #
+
+_initialize_default_backend()
+atexit.register(_remove_cached_downloads, _DOWNLOAD_CACHE)
+
+_BACKEND_MAPPING = {
+    "afplay": _playsound_afplay,
+    "alsa_mpg123": _playsound_alsa,
+    "ffplay": _playsound_ffplay,
+    "gst_play": _playsound_gst_play,
+    "gst_legacy": _playsound_gst_legacy,
+    "mci_winmm": _playsound_mci_winmm,
+}
+
+AVAILABLE_BACKENDS = list(_BACKEND_MAPPING.keys())
