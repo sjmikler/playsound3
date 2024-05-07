@@ -1,0 +1,50 @@
+name: Install locally and run pytest on Linux
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [ "3.7", "3.8", "3.9", "3.10", "3.11", "3.12" ]
+
+    steps:
+      #      - name: Setup GStreamer
+      #        id: setup_gstreamer
+      #        uses: blinemedical/setup-gstreamer@v1.4.0
+
+      - name: Start PulseAudio server
+        run: |
+          sudo apt-get -y install pulseaudio pulseaudio-utils
+          pulseaudio --start
+          pactl load-module module-null-sink sink_name=virtual-sink sink_properties=device.description="Virtual_Sink"
+          pactl set-default-sink virtual-sink
+      - name: Check PulseAudio status
+        run: pulseaudio --check
+      - name: List PulseAudio sinks
+        run: pactl list short sinks
+      - name: Setup GStreamer
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install libunwind-dev libgirepository1.0-dev gstreamer1.0 gstreamer1.0-pulseaudio gstreamer1.0-alsa
+          sudo apt-get -y install libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-bad1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools gstreamer1.0-x gstreamer1.0-alsa gstreamer1.0-gl gstreamer1.0-gtk3 gstreamer1.0-qt5 gstreamer1.0-pulseaudio
+          gst-inspect-1.0
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          pip install .
+          pip install pytest
+
+      - name: Test with pytest
+        run: |
+          timeout 60 pytest tests --log-cli-level=WARNING -vv

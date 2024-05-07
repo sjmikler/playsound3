@@ -109,7 +109,7 @@ def _send_winmm_mci_command(command):
     buffer = ctypes.create_string_buffer(255)
     error_code = winmm.mciSendStringA(ctypes.c_char_p(command.encode()), buffer, 254, 0)
     if error_code:
-        logger.error("Error code: %s", error_code)
+        logger.error("MCI error code: %s", error_code)
     return buffer.value
 
 

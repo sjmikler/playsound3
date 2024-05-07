@@ -2,10 +2,18 @@ import time
 
 from playsound3 import playsound
 
-MP3_3s = "https://samplelib.com/lib/preview/mp3/sample-3s.mp3"
-MP3_6s = "https://samplelib.com/lib/preview/mp3/sample-6s.mp3"
-WAV_3s = "https://samplelib.com/lib/preview/wav/sample-3s.wav"
-WAV_6s = "https://samplelib.com/lib/preview/wav/sample-6s.wav"
+# MP3_3s = "https://samplelib.com/lib/preview/mp3/sample-3s.mp3"
+# MP3_6s = "https://samplelib.com/lib/preview/mp3/sample-6s.mp3"
+# WAV_3s = "https://samplelib.com/lib/preview/wav/sample-3s.wav"
+# WAV_6s = "https://samplelib.com/lib/preview/wav/sample-6s.wav"
+MP3_3s = "audio-samples/sample-3s.mp3"
+MP3_6s = "audio-samples/sample-6s.mp3"
+WAV_3s = "audio-samples/sample-3s.wav"
+WAV_6s = "audio-samples/sample-6s.wav"
+
+
+def test_dummy():
+    pass
 
 
 def test_with_blocking():

@@ -60,3 +60,4 @@ target/
 
 # Custom
 devel/
+**/script*
