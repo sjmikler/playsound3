@@ -1,4 +1,5 @@
 import time
+
 from playsound3 import playsound
 
 MP3_3s = "https://samplelib.com/lib/preview/mp3/sample-3s.mp3"

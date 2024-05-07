@@ -27,8 +27,9 @@ def playsound(sound, block: bool = True) -> None:
     """Play a sound file using an audio backend availabile in your system.
 
     Args:
-        sound: Path to the sound file. Can be either an str or pathlib.Path.
+        sound: Path or URL to the sound file. Can be a string or pathlib.Path.
         block: If True, the function will block execution until the sound finishes playing.
+               If False, sound will play in a background thread.
     """
     sound = _prepare_path(sound)
 
