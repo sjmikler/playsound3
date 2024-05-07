@@ -47,6 +47,12 @@ Documentation = "https://github.com/sjmikler/playsound3?tab=readme-ov-file#docum
 ## Formatting and testing tools ##
 ##################################
 
+[tool.mypy]
+ignore_missing_imports = true
+
+[tool.flake8]
+max-line-length = 120
+
 [tool.isort]
 profile = "black"
 line_length = 120

@@ -44,7 +44,7 @@ def playsound(sound, block: bool = True) -> None:
     if block:
         func(sound)
     else:
-        t = Thread(target=func, args=(sound,), daemon=True).start()
+        Thread(target=func, args=(sound,), daemon=True).start()
 
 
 def _download_sound_from_web(link, destination):
