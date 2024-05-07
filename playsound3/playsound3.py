@@ -34,7 +34,7 @@ def playsound(sound, block: bool = True) -> None:
     sound = _prepare_path(sound)
 
     if SYSTEM == "Linux":
-        func = _playsound_gstreamer
+        func = _playsound_gstreamer2
     elif SYSTEM == "Windows":
         func = _playsound_winmm
     elif SYSTEM == "Darwin":
@@ -102,6 +102,16 @@ def _playsound_gstreamer(sound):
     finally:
         playbin.set_state(Gst.State.NULL)
     logger.debug("gstreamer: finishing play %s", sound)
+
+
+def _playsound_gstreamer2(sound):
+    """Uses gst-play-1.0 utility (built-in Linux)."""
+    logger.debug("gst-play-1.0: starting playing %s", sound)
+    try:
+        subprocess.run(["gst-play-1.0", "--no-interactive", "--quiet", sound], check=True)
+    except subprocess.CalledProcessError as e:
+        raise PlaysoundException(f"gst-play-1.0 failed to play sound: {e}")
+    logger.debug("gst-play-1.0: finishing play %s", sound)
 
 
 def _send_winmm_mci_command(command):

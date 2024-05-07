@@ -23,8 +23,8 @@ def test_with_blocking():
         assert time.time() - t0 >= 6.0
 
 
-# def test_non_blocking():
-#     t0 = time.time()
-#     for sound in [MP3_3s, WAV_3s, MP3_6s, WAV_6s]:
-#         playsound(sound, block=False)
-#     assert time.time() - t0 < 1.0
+def test_non_blocking():
+    t0 = time.time()
+    for sound in [MP3_3s, WAV_3s, MP3_6s, WAV_6s]:
+        playsound(sound, block=False)
+    assert time.time() - t0 < 1.0
