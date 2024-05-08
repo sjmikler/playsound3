@@ -62,7 +62,7 @@ It is recommended to use the default value of `None` to let the library choose t
 
 ## Fork information
 
-This repository was originally forked from [playsound](https://github.com/TaylorSMarks/playsound) library created by Taylor Marks. The original library is unfortunately not maintained anymore and doesn't accept pull requests. This library: `playsound3` is a major rewrite of the original. 
+This repository was originally forked from [playsound](https://github.com/TaylorSMarks/playsound) library created by Taylor Marks. The original library is unfortunately not maintained anymore and doesn't accept pull requests. This library: `playsound3` is a major rewrite of the original, including its own set of tests hosted using GitHub Actions. 
 
 Compared to the original, `playsound3`:
 * drops support for Python 2
