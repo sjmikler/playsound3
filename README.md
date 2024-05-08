@@ -59,3 +59,13 @@ It is recommended to use the default value of `None` to let the library choose t
     * aplay for .wav and mpg123 .mp3
 * **Windows** using winmm.dll (built-in on Windows)
 * **OS X** using afplay utility (built-in on OS X)
+
+## Fork information
+
+This repository was originally forked from [playsound](https://github.com/TaylorSMarks/playsound) library created by Taylor Marks. The original library is unfortunately not maintained anymore and doesn't accept pull requests. This library: `playsound3` is a major rewrite of the original. 
+
+Compared to the original, `playsound3`:
+* drops support for Python 2
+* adheres to the latest PEP standards
+* offers multiple backends with a fallback mechanism if the default backend is not available
+* is accepting contributions
