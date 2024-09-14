@@ -1,7 +1,6 @@
 import atexit
 import ctypes
 import logging
-import os
 import platform
 import ssl
 import subprocess
