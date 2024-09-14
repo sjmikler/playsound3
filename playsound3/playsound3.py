@@ -15,7 +15,6 @@ from typing import Callable, Dict, Union
 
 import certifi
 
-logging.basicConfig(level=os.environ.get("LOGLEVEL", "WARNING"))
 logger = logging.getLogger(__name__)
 
 _PLAYSOUND_DEFAULT_BACKEND: Callable[[str], None]
