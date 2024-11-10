@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "playsound3"
-version = "2.2.3"
+version = "2.3.0"
 requires-python = ">=3.7"
 authors = [
     { name = "Szymon Mikler", email = "sjmikler@gmail.com" },
