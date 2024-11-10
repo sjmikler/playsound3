@@ -58,7 +58,7 @@ def _download_sound_from_web(link, destination):
 
 
 def _prepare_path(sound) -> str:
-    if sound.startswith(("http://", "https://")):
+    if isinstance(sound, str) and sound.startswith(("http://", "https://")):
         # To play file from URL, we download the file first to a temporary location and cache it
         if sound not in _DOWNLOAD_CACHE:
             sound_suffix = Path(sound).suffix
