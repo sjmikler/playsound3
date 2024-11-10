@@ -25,7 +25,7 @@ class PlaysoundException(Exception):
     pass
 
 
-def playsound(sound, block: bool = True, backend: Union[str, None] = None, daemon=True) -> None:
+def playsound(sound, block: bool = True, backend: Union[str, None] = None, daemon=True):
     """Play a sound file using an audio backend availabile in your system.
 
     Args:
@@ -35,6 +35,10 @@ def playsound(sound, block: bool = True, backend: Union[str, None] = None, daemo
         backend: Name of the audio backend to use. Use None for automatic selection.
         daemon: If True, and `block` is True, the background thread will be a daemon thread.
                 This means that the thread will stay alive even after the main program exits.
+
+    Returns:
+        If `block` is True, the function will return None after the sound finishes playing.
+        If `block` is False, the function will return the background thread object.
     """
     if backend is None:
         _play = _PLAYSOUND_DEFAULT_BACKEND
@@ -47,7 +51,9 @@ def playsound(sound, block: bool = True, backend: Union[str, None] = None, daemo
     if block:
         _play(path)
     else:
-        Thread(target=_play, args=(path,), daemon=daemon).start()
+        thread = Thread(target=_play, args=(path,), daemon=daemon)
+        thread.start()
+        return thread
 
 
 def _download_sound_from_web(link, destination):
