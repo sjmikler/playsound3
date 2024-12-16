@@ -21,7 +21,6 @@ import certifi
 
 logger = logging.getLogger(__name__)
 
-_PLAYSOUND_DEFAULT_BACKEND: Callable[[str], None]
 _DOWNLOAD_CACHE = {}
 
 
@@ -240,17 +239,14 @@ def _playsound_afplay(sound: str) -> None:
     logger.debug("afplay: finishing play %s", sound)
 
 
-def _initialize_default_backend() -> None:
-    global _PLAYSOUND_DEFAULT_BACKEND
-
+def _initialize_default_backend() -> Callable[[str], None]:
     if sys.platform == "Windows":
-        _PLAYSOUND_DEFAULT_BACKEND = _playsound_mci_winmm
-    elif sys.platform == "Darwin":
-        _PLAYSOUND_DEFAULT_BACKEND = _playsound_afplay
-    else:
-        # Linux version serves as the fallback
-        # because tools like gstreamer and ffmpeg could be installed on unrecognized systems
-        _PLAYSOUND_DEFAULT_BACKEND = _select_linux_backend()
+        return _playsound_mci_winmm
+    if sys.platform == "Darwin":
+        return _playsound_afplay
+    # Linux version serves as the fallback
+    # because tools like gstreamer and ffmpeg could be installed on unrecognized systems
+    return _select_linux_backend()
 
 
 def _remove_cached_downloads(cache: dict[str, str]) -> None:
@@ -263,7 +259,7 @@ def _remove_cached_downloads(cache: dict[str, str]) -> None:
 # PLAYSOUND INITIALIZATION #
 # ######################## #
 
-_initialize_default_backend()
+_PLAYSOUND_DEFAULT_BACKEND = _initialize_default_backend()
 atexit.register(_remove_cached_downloads, _DOWNLOAD_CACHE)
 
 _BACKEND_MAPPING = {
