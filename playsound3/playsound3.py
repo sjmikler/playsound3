@@ -10,7 +10,13 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 from threading import Thread
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any, Callable
+
+# Satisfy mypy
+if TYPE_CHECKING:
+    if sys.platform == "Windows":
+        import ctypes
+        import uuid
 
 import certifi
 
