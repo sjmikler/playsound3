@@ -18,9 +18,10 @@ jobs:
       #      - name: Setup GStreamer
       #        id: setup_gstreamer
       #        uses: blinemedical/setup-gstreamer@v1.4.0
-
-      - name: Start PulseAudio server
+      # TODO(Martin): Migrate to pipewire-pulse
+      - name: Start PulseAudio server - TODO migrate to pipewire-pulse!
         run: |
+          sudo apt-get update
           sudo apt-get -y install pulseaudio pulseaudio-utils
           pulseaudio --start
           pactl load-module module-null-sink sink_name=virtual-sink sink_properties=device.description="Virtual_Sink"
