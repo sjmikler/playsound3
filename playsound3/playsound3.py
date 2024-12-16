@@ -13,10 +13,9 @@ from threading import Thread
 from typing import TYPE_CHECKING, Any, Callable
 
 # Satisfy mypy
-if TYPE_CHECKING:
-    if sys.platform == "Windows":
-        import ctypes
-        import uuid
+if TYPE_CHECKING or sys.platform == "Windows":
+    import ctypes
+    import uuid
 
 import certifi
 
@@ -25,9 +24,6 @@ logger = logging.getLogger(__name__)
 _PLAYSOUND_DEFAULT_BACKEND: Callable[[str], None]
 _DOWNLOAD_CACHE = {}
 
-if not TYPE_CHECKING and sys.platform == "Windows":
-    import ctypes
-    import uuid
 
 
 class PlaysoundException(Exception):
