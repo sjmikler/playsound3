@@ -24,6 +24,7 @@ if sys.platform == "Windows":
     import uuid
 
 class PlaysoundException(Exception):
+
     pass
 
 
