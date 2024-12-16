@@ -1,15 +1,13 @@
 from __future__ import annotations
 
 import atexit
-import ctypes
 import logging
-import platform
 import ssl
 import subprocess
+import sys
 import tempfile
 import urllib.error
 import urllib.request
-import uuid
 from pathlib import Path
 from threading import Thread
 from typing import Any, Callable
@@ -19,9 +17,11 @@ import certifi
 logger = logging.getLogger(__name__)
 
 _PLAYSOUND_DEFAULT_BACKEND: Callable[[str], None]
-_SYSTEM = platform.system()
 _DOWNLOAD_CACHE = {}
 
+if sys.platform == "Windows":
+    import ctypes
+    import uuid
 
 class PlaysoundException(Exception):
     pass
@@ -204,6 +204,8 @@ def _playsound_gst_legacy(sound: str) -> None:
 
 
 def _send_winmm_mci_command(command: str) -> Any:
+    if sys.platform != "Windows":
+        raise RuntimeError("WinMM is only available on Windows systems.")
     winmm = ctypes.WinDLL("winmm.dll")
     buffer = ctypes.create_string_buffer(255)
     error_code = winmm.mciSendStringA(ctypes.c_char_p(command.encode()), buffer, 254, 0)
@@ -214,6 +216,8 @@ def _send_winmm_mci_command(command: str) -> Any:
 
 def _playsound_mci_winmm(sound: str) -> None:
     """Play a sound utilizing windll.winmm."""
+    if sys.platform != "Windows":
+        raise RuntimeError("WinMM is only available on Windows systems.")
     # Select a unique alias for the sound
     alias = str(uuid.uuid4())
     logger.debug("winmm: starting playing %s", sound)
@@ -236,9 +240,9 @@ def _playsound_afplay(sound: str) -> None:
 def _initialize_default_backend() -> None:
     global _PLAYSOUND_DEFAULT_BACKEND
 
-    if _SYSTEM == "Windows":
+    if sys.platform == "Windows":
         _PLAYSOUND_DEFAULT_BACKEND = _playsound_mci_winmm
-    elif _SYSTEM == "Darwin":
+    elif sys.platform == "Darwin":
         _PLAYSOUND_DEFAULT_BACKEND = _playsound_afplay
     else:
         # Linux version serves as the fallback

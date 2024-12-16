@@ -69,10 +69,8 @@ indent-style = "tab"
 
 [tool.ruff.lint]
 select = ['ALL']
-# Example ignore
 ignore = [
-#    'FBT001', # boolean-type-hint-positional-argument     - Allow positional booleans in functions, it's not really that much of an issue
-#    'FBT002', # boolean-default-value-positional-argument - ^
-#    'FBT003', # boolean-positional-value-in-call          - ^
-#    'TD003',  # missing-todo-link                         - We're fine not linking existing issues in TODOs, it's fine to have them noted in code only
+    'FBT001', # boolean-type-hint-positional-argument     - Allow positional booleans in functions, it's not really that much of an issue
+    'FBT002', # boolean-default-value-positional-argument - ^
+    'FBT003', # boolean-positional-value-in-call          - ^
 ]
