@@ -23,8 +23,8 @@ if sys.platform == "Windows":
     import ctypes
     import uuid
 
-class PlaysoundException(Exception):
 
+class PlaysoundException(Exception):
     pass
 
 
