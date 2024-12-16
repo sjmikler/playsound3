@@ -24,7 +24,6 @@ logger = logging.getLogger(__name__)
 _DOWNLOAD_CACHE = {}
 
 
-
 class PlaysoundException(Exception):
     pass
 
