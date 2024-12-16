@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 _PLAYSOUND_DEFAULT_BACKEND: Callable[[str], None]
 _DOWNLOAD_CACHE = {}
 
-if sys.platform == "Windows":
+if not TYPE_CHECKING and sys.platform == "Windows":
     import ctypes
     import uuid
 
