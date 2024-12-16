@@ -27,7 +27,12 @@ class PlaysoundException(Exception):
     pass
 
 
-def playsound(sound: str | Path, block: bool = True, backend: str | None = None, daemon: bool = True) -> Thread | None:
+def playsound(
+        sound: str | Path,
+        block: bool = True,
+        backend: str | None = None,
+        daemon: bool = True,
+    ) -> Thread | None:
     """Play a sound file using an audio backend availabile in your system.
 
     Args:

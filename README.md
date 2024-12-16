@@ -31,7 +31,12 @@ playsound("http://url/to/sound/file.mp3")
 The `playsound3` module contains a single function named `playsound`:
 
 ```python
-def playsound(sound, block=True, backend=None) -> None:
+def playsound(
+        sound: str | Path,
+        block: bool = True,
+        backend: str | None = None,
+        daemon: bool = True,
+    ) -> Thread | None:
     """Play a sound file using an audio backend availabile in your system.
 
     Args:
@@ -39,6 +44,13 @@ def playsound(sound, block=True, backend=None) -> None:
         block: If True, the function will block execution until the sound finishes playing.
                If False, sound will play in a background thread.
         backend: Name of the audio backend to use. Use None for automatic selection.
+        daemon: If True, and `block` is True, the background thread will be a daemon thread.
+                This means that the thread will stay alive even after the main program exits.
+
+    Returns:
+        If `block` is True, the function will return None after the sound finishes playing.
+        If `block` is False, the function will return the background thread object.
+
     """
     ...
 ```
@@ -58,14 +70,14 @@ It is recommended to use the default value of `None` to let the library choose t
     * FFmpeg
     * aplay for .wav and mpg123 .mp3
 * **Windows** using winmm.dll (built-in on Windows)
-* **OS X** using afplay utility (built-in on OS X)
+* **macOS** using afplay utility (built-in on macOS)
 
 ## Fork information
 
-This repository was originally forked from [playsound](https://github.com/TaylorSMarks/playsound) library created by Taylor Marks. The original library is unfortunately not maintained anymore and doesn't accept pull requests. This library: `playsound3` is a major rewrite of the original, including its own set of tests hosted using GitHub Actions. 
+This repository was originally forked from [playsound](https://github.com/TaylorSMarks/playsound) library created by Taylor Marks. The original library is unfortunately not maintained anymore and doesn't accept pull requests. This library: `playsound3` is a major rewrite of the original, including its own set of tests hosted using GitHub Actions.
 
 Compared to the original, `playsound3`:
-* drops support for Python 2
-* adheres to the latest PEP standards
-* offers multiple backends with a fallback mechanism if the default backend is not available
-* is accepting contributions
+* Drops support for Python 2
+* Adheres to the latest PEP standards
+* Offers multiple backends with a fallback mechanism if the default backend is not available
+* Accepts contributions
