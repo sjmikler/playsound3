@@ -94,18 +94,18 @@ def _prepare_path(sound: str | Path) -> str:
 
 def _select_linux_backend() -> Callable[[str], None]:
     """Select the best available audio backend for Linux systems."""
-    logging.info("Selecting the best available audio backend for Linux systems.")
+    logger.info("Selecting the best available audio backend for Linux systems.")
 
     try:
         subprocess.run(["gst-play-1.0", "--version"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
-        logging.info("Using gst-play-1.0 as the audio backend.")
+        logger.info("Using gst-play-1.0 as the audio backend.")
         return _playsound_gst_play
     except FileNotFoundError:
         pass
 
     try:
         subprocess.run(["ffplay", "-version"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
-        logging.info("Using ffplay as the audio backend.")
+        logger.info("Using ffplay as the audio backend.")
         return _playsound_ffplay
     except FileNotFoundError:
         pass
@@ -113,12 +113,12 @@ def _select_linux_backend() -> Callable[[str], None]:
     try:
         subprocess.run(["aplay", "--version"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
         subprocess.run(["mpg123", "--version"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
-        logging.info("Using aplay and mpg123 as the audio backend.")
+        logger.info("Using aplay and mpg123 as the audio backend.")
         return _playsound_alsa
     except FileNotFoundError:
         pass
 
-    logging.info("No suitable audio backend found.")
+    logger.info("No suitable audio backend found.")
     raise PlaysoundException("No suitable audio backend found. Install gstreamer or ffmpeg!")
 
 
