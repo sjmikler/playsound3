@@ -2,9 +2,9 @@ name: Install locally and run pytest on Linux
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   build:
@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [ "3.7", "3.8", "3.9", "3.10", "3.11", "3.12" ]
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
 
     steps:
       #      - name: Setup GStreamer
@@ -32,12 +32,31 @@ jobs:
       - name: Setup GStreamer
         run: |
           sudo apt-get update
-          sudo apt-get -y install libunwind-dev libgirepository1.0-dev gstreamer1.0 gstreamer1.0-pulseaudio gstreamer1.0-alsa
-          sudo apt-get -y install libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-bad1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools gstreamer1.0-x gstreamer1.0-alsa gstreamer1.0-gl gstreamer1.0-gtk3 gstreamer1.0-qt5 gstreamer1.0-pulseaudio
+          sudo apt-get -y install \
+              libunwind-dev \
+              libgirepository1.0-dev \
+              gstreamer1.0 \
+              gstreamer1.0-pulseaudio \
+              gstreamer1.0-alsa \
+              libgstreamer1.0-dev \
+              libgstreamer-plugins-base1.0-dev \
+              libgstreamer-plugins-bad1.0-dev \
+              gstreamer1.0-plugins-base \
+              gstreamer1.0-plugins-good \
+              gstreamer1.0-plugins-bad \
+              gstreamer1.0-plugins-ugly \
+              gstreamer1.0-libav \
+              gstreamer1.0-tools \
+              gstreamer1.0-x \
+              gstreamer1.0-alsa \
+              gstreamer1.0-gl \
+              gstreamer1.0-gtk3 \
+              gstreamer1.0-qt5 \
+              gstreamer1.0-pulseaudio
           gst-inspect-1.0
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
