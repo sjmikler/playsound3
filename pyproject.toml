@@ -65,7 +65,7 @@ line-length = 120
 
 [tool.ruff.format]
 quote-style = "double"
-indent-style = "tab"
+indent-style = "space"
 
 [tool.ruff.lint]
 select = ['ALL']
