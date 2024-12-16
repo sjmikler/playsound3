@@ -13,7 +13,7 @@ from threading import Thread
 from typing import TYPE_CHECKING, Any, Callable
 
 # Satisfy mypy
-if TYPE_CHECKING or sys.platform == "Windows":
+if TYPE_CHECKING or sys.platform == "win32":
     import ctypes
     import uuid
 
@@ -205,7 +205,7 @@ def _playsound_gst_legacy(sound: str) -> None:
 
 
 def _send_winmm_mci_command(command: str) -> Any:
-    if sys.platform != "Windows":
+    if sys.platform != "win32":
         raise RuntimeError("WinMM is only available on Windows systems.")
     winmm = ctypes.WinDLL("winmm.dll")
     buffer = ctypes.create_string_buffer(255)
@@ -217,7 +217,7 @@ def _send_winmm_mci_command(command: str) -> Any:
 
 def _playsound_mci_winmm(sound: str) -> None:
     """Play a sound utilizing windll.winmm."""
-    if sys.platform != "Windows":
+    if sys.platform != "win32":
         raise RuntimeError("WinMM is only available on Windows systems.")
     # Select a unique alias for the sound
     alias = str(uuid.uuid4())
@@ -239,9 +239,9 @@ def _playsound_afplay(sound: str) -> None:
 
 
 def _initialize_default_backend() -> Callable[[str], None]:
-    if sys.platform == "Windows":
+    if sys.platform == "win32":
         return _playsound_mci_winmm
-    if sys.platform == "Darwin":
+    if sys.platform == "darwin":
         return _playsound_afplay
     # Linux version serves as the fallback
     # because tools like gstreamer and ffmpeg could be installed on unrecognized systems
