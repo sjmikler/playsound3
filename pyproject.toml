@@ -44,8 +44,8 @@ Documentation = "https://github.com/sjmikler/playsound3?tab=readme-ov-file#docum
 ## Formatting and testing tools ##
 ##################################
 
-[tool.mypy]
-ignore_missing_imports = true
+[tool.black]
+line_length = 120
 
 [tool.flake8]
 max-line-length = 120
@@ -54,5 +54,25 @@ max-line-length = 120
 profile = "black"
 line_length = 120
 
-[tool.black]
-line_length = 120
+[tool.mypy]
+ignore_missing_imports = true
+
+[tool.pyright]
+pythonVersion = "3.9"
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "tab"
+
+[tool.ruff.lint]
+select = ['ALL']
+# Example ignore
+ignore = [
+#    'FBT001', # boolean-type-hint-positional-argument     - Allow positional booleans in functions, it's not really that much of an issue
+#    'FBT002', # boolean-default-value-positional-argument - ^
+#    'FBT003', # boolean-positional-value-in-call          - ^
+#    'TD003',  # missing-todo-link                         - We're fine not linking existing issues in TODOs, it's fine to have them noted in code only
+]
