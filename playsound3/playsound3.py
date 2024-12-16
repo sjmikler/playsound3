@@ -1,31 +1,39 @@
+from __future__ import annotations
+
 import atexit
-import ctypes
 import logging
-import platform
 import ssl
 import subprocess
+import sys
 import tempfile
 import urllib.error
 import urllib.request
-import uuid
 from pathlib import Path
 from threading import Thread
-from typing import Callable, Dict, Union
+from typing import TYPE_CHECKING, Any, Callable
+
+# Satisfy mypy
+if TYPE_CHECKING or sys.platform == "win32":
+    import ctypes
+    import uuid
 
 import certifi
 
 logger = logging.getLogger(__name__)
 
-_PLAYSOUND_DEFAULT_BACKEND: Callable[[str], None]
-_SYSTEM = platform.system()
-_DOWNLOAD_CACHE = dict()
+_DOWNLOAD_CACHE = {}
 
 
 class PlaysoundException(Exception):
     pass
 
 
-def playsound(sound, block: bool = True, backend: Union[str, None] = None, daemon=True):
+def playsound(
+    sound: str | Path,
+    block: bool = True,
+    backend: str | None = None,
+    daemon: bool = True,
+) -> Thread | None:
     """Play a sound file using an audio backend availabile in your system.
 
     Args:
@@ -39,6 +47,7 @@ def playsound(sound, block: bool = True, backend: Union[str, None] = None, daemo
     Returns:
         If `block` is True, the function will return None after the sound finishes playing.
         If `block` is False, the function will return the background thread object.
+
     """
     if backend is None:
         _play = _PLAYSOUND_DEFAULT_BACKEND
@@ -54,24 +63,25 @@ def playsound(sound, block: bool = True, backend: Union[str, None] = None, daemo
         thread = Thread(target=_play, args=(path,), daemon=daemon)
         thread.start()
         return thread
+    return None
 
 
-def _download_sound_from_web(link, destination):
+def _download_sound_from_web(link: str, destination: Path) -> None:
     # Identifies itself as a browser to avoid HTTP 403 errors
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64)"}
     request = urllib.request.Request(link, headers=headers)
     context = ssl.create_default_context(cafile=certifi.where())
-    with urllib.request.urlopen(request, context=context) as response, open(destination, "wb") as out_file:
+    with urllib.request.urlopen(request, context=context) as response, destination.open("wb") as out_file:
         out_file.write(response.read())
 
 
-def _prepare_path(sound) -> str:
+def _prepare_path(sound: str | Path) -> str:
     if isinstance(sound, str) and sound.startswith(("http://", "https://")):
         # To play file from URL, we download the file first to a temporary location and cache it
         if sound not in _DOWNLOAD_CACHE:
             sound_suffix = Path(sound).suffix
             with tempfile.NamedTemporaryFile(delete=False, prefix="playsound3-", suffix=sound_suffix) as f:
-                _download_sound_from_web(sound, f.name)
+                _download_sound_from_web(sound, Path(f.name))
                 _DOWNLOAD_CACHE[sound] = f.name
         sound = _DOWNLOAD_CACHE[sound]
 
@@ -194,7 +204,9 @@ def _playsound_gst_legacy(sound: str) -> None:
     logger.debug("gstreamer: finishing play %s", sound)
 
 
-def _send_winmm_mci_command(command):
+def _send_winmm_mci_command(command: str) -> Any:
+    if sys.platform != "win32":
+        raise RuntimeError("WinMM is only available on Windows systems.")
     winmm = ctypes.WinDLL("winmm.dll")
     buffer = ctypes.create_string_buffer(255)
     error_code = winmm.mciSendStringA(ctypes.c_char_p(command.encode()), buffer, 254, 0)
@@ -205,7 +217,8 @@ def _send_winmm_mci_command(command):
 
 def _playsound_mci_winmm(sound: str) -> None:
     """Play a sound utilizing windll.winmm."""
-
+    if sys.platform != "win32":
+        raise RuntimeError("WinMM is only available on Windows systems.")
     # Select a unique alias for the sound
     alias = str(uuid.uuid4())
     logger.debug("winmm: starting playing %s", sound)
@@ -225,32 +238,27 @@ def _playsound_afplay(sound: str) -> None:
     logger.debug("afplay: finishing play %s", sound)
 
 
-def _initialize_default_backend() -> None:
-    global _PLAYSOUND_DEFAULT_BACKEND
-
-    if _SYSTEM == "Windows":
-        _PLAYSOUND_DEFAULT_BACKEND = _playsound_mci_winmm
-    elif _SYSTEM == "Darwin":
-        _PLAYSOUND_DEFAULT_BACKEND = _playsound_afplay
-    else:
-        # Linux version serves as the fallback
-        # because tools like gstreamer and ffmpeg could be installed on unrecognized systems
-        _PLAYSOUND_DEFAULT_BACKEND = _select_linux_backend()
+def _initialize_default_backend() -> Callable[[str], None]:
+    if sys.platform == "win32":
+        return _playsound_mci_winmm
+    if sys.platform == "darwin":
+        return _playsound_afplay
+    # Linux version serves as the fallback
+    # because tools like gstreamer and ffmpeg could be installed on unrecognized systems
+    return _select_linux_backend()
 
 
-def _remove_cached_downloads(cache: Dict[str, str]) -> None:
+def _remove_cached_downloads(cache: dict[str, str]) -> None:
     """Remove all files saved in the cache when the program ends."""
-    import os
-
     for path in cache.values():
-        os.remove(path)
+        Path(path).unlink()
 
 
 # ######################## #
 # PLAYSOUND INITIALIZATION #
 # ######################## #
 
-_initialize_default_backend()
+_PLAYSOUND_DEFAULT_BACKEND = _initialize_default_backend()
 atexit.register(_remove_cached_downloads, _DOWNLOAD_CACHE)
 
 _BACKEND_MAPPING = {

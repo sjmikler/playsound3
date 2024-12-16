@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "playsound3"
-version = "2.4.0"
-requires-python = ">=3.7"
+version = "2.5.0"
+requires-python = ">=3.9"
 authors = [
     { name = "Szymon Mikler", email = "sjmikler@gmail.com" },
     { name = "Taylor Marks", email = "taylor@marksfam.com" },
@@ -22,15 +22,15 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Multimedia :: Sound/Audio :: MIDI",
     "Topic :: Multimedia :: Sound/Audio :: Players",
     "Topic :: Multimedia :: Sound/Audio :: Players :: MP3",
+    "Typing :: Typed",
     "Operating System :: OS Independent",
 ]
 dependencies = ["certifi"]
@@ -44,8 +44,8 @@ Documentation = "https://github.com/sjmikler/playsound3?tab=readme-ov-file#docum
 ## Formatting and testing tools ##
 ##################################
 
-[tool.mypy]
-ignore_missing_imports = true
+[tool.black]
+line_length = 120
 
 [tool.flake8]
 max-line-length = 120
@@ -54,5 +54,23 @@ max-line-length = 120
 profile = "black"
 line_length = 120
 
-[tool.black]
-line_length = 120
+[tool.mypy]
+ignore_missing_imports = true
+
+[tool.pyright]
+pythonVersion = "3.9"
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.ruff.lint]
+select = ['ALL']
+ignore = [
+    'FBT001', # boolean-type-hint-positional-argument     - Allow positional booleans in functions, it's not really that much of an issue
+    'FBT002', # boolean-default-value-positional-argument - ^
+    'FBT003', # boolean-positional-value-in-call          - ^
+]
