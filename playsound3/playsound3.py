@@ -208,8 +208,8 @@ def _send_winmm_mci_command(command: str) -> Any:
     if sys.platform != "win32":
         raise RuntimeError("WinMM is only available on Windows systems.")
     winmm = ctypes.WinDLL("winmm.dll")
-    buffer = ctypes.create_string_buffer(255)
-    error_code = winmm.mciSendStringA(ctypes.c_char_p(command.encode()), buffer, 254, 0)
+    buffer = ctypes.create_unicode_buffer(255)  # Unicode buffer for wide characters
+    error_code = winmm.mciSendStringW(ctypes.c_wchar_p(command), buffer, 254, 0)  # Use mciSendStringW
     if error_code:
         logger.error("MCI error code: %s", error_code)
     return buffer.value
