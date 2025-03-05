@@ -244,9 +244,11 @@ def _playsound_wmplayer(sound: str) -> None:
     wmp.URL = sound
     wmp.controls.play() # Start playback
 
+    t0 = time.time()
     while wmp.playState != 1:  # playState 1 indicates stopped
         pythoncom.PumpWaitingMessages()  # Process COM events
         time.sleep(0.05)
+    #wmp.controls.stop()
     logger.debug("wmplayer: finishing play %s", sound)
 
 
