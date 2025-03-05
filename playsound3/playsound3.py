@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-import time
 import atexit
 import logging
 import ssl
 import subprocess
 import sys
 import tempfile
+import time
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -205,7 +205,6 @@ def _playsound_gst_legacy(sound: str) -> None:
     logger.debug("gstreamer: finishing play %s", sound)
 
 
-
 def _send_winmm_mci_command(command: str) -> Any:
     if sys.platform != "win32":
         raise RuntimeError("WinMM is only available on Windows systems.")
@@ -232,23 +231,23 @@ def _playsound_mci_winmm(sound: str) -> None:
 
 
 def _playsound_wmplayer(sound: str) -> None:
-    import win32com.client
     import pythoncom
+    import win32com.client
+
     logger.debug("wmplayer: starting playing %s", sound)
 
     # Create the Windows Media Player COM object
     wmp = win32com.client.Dispatch("WMPlayer.OCX")
-    wmp.settings.autoStart = True # Ensure playback starts automatically
+    wmp.settings.autoStart = True  # Ensure playback starts automatically
 
     # Set the URL to your MP3 file
     wmp.URL = sound
-    wmp.controls.play() # Start playback
+    wmp.controls.play()  # Start playback
 
-    t0 = time.time()
     while wmp.playState != 1:  # playState 1 indicates stopped
         pythoncom.PumpWaitingMessages()  # Process COM events
         time.sleep(0.05)
-    #wmp.controls.stop()
+    # wmp.controls.stop()
     logger.debug("wmplayer: finishing play %s", sound)
 
 

@@ -35,7 +35,7 @@ classifiers = [
 ]
 dependencies = [
     "certifi",
-    'pywin32 ; platform_system != "Windows"',
+    "pywin32; sys_platform == 'windows'",
     ]
 
 [project.urls]
