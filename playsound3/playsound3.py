@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 import atexit
 import logging
 import ssl
@@ -204,6 +205,7 @@ def _playsound_gst_legacy(sound: str) -> None:
     logger.debug("gstreamer: finishing play %s", sound)
 
 
+
 def _send_winmm_mci_command(command: str) -> Any:
     if sys.platform != "win32":
         raise RuntimeError("WinMM is only available on Windows systems.")
@@ -212,6 +214,7 @@ def _send_winmm_mci_command(command: str) -> Any:
     error_code = winmm.mciSendStringW(ctypes.c_wchar_p(command), buffer, 254, 0)  # Use mciSendStringW
     if error_code:
         logger.error("MCI error code: %s", error_code)
+        raise RuntimeError("WinMM was not able to play the file!")
     return buffer.value
 
 
@@ -228,6 +231,25 @@ def _playsound_mci_winmm(sound: str) -> None:
     logger.debug("winmm: finishing play %s", sound)
 
 
+def _playsound_wmplayer(sound: str) -> None:
+    import win32com.client
+    import pythoncom
+    logger.debug("wmplayer: starting playing %s", sound)
+
+    # Create the Windows Media Player COM object
+    wmp = win32com.client.Dispatch("WMPlayer.OCX")
+    wmp.settings.autoStart = True # Ensure playback starts automatically
+
+    # Set the URL to your MP3 file
+    wmp.URL = sound
+    wmp.controls.play() # Start playback
+
+    while wmp.playState != 1:  # playState 1 indicates stopped
+        pythoncom.PumpWaitingMessages()  # Process COM events
+        time.sleep(0.05)
+    logger.debug("wmplayer: finishing play %s", sound)
+
+
 def _playsound_afplay(sound: str) -> None:
     """Uses afplay utility (built-in macOS)."""
     logger.debug("afplay: starting playing %s", sound)
@@ -240,7 +262,7 @@ def _playsound_afplay(sound: str) -> None:
 
 def _initialize_default_backend() -> Callable[[str], None]:
     if sys.platform == "win32":
-        return _playsound_mci_winmm
+        return _playsound_wmplayer
     if sys.platform == "darwin":
         return _playsound_afplay
     # Linux version serves as the fallback
