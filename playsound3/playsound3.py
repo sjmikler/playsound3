@@ -129,7 +129,7 @@ def _playsound_gst_play(sound: str) -> None:
     try:
         subprocess.run(["gst-play-1.0", "--no-interactive", "--quiet", sound], check=True)
     except subprocess.CalledProcessError as e:
-        raise PlaysoundException(f"gst-play-1.0 failed to play sound: {e}")
+        raise PlaysoundException(f"gst-play-1.0 failed to play sound: {e}") from e
     logger.debug("gst-play-1.0: finishing play %s", sound)
 
 
@@ -143,7 +143,7 @@ def _playsound_ffplay(sound: str) -> None:
             stdout=subprocess.DEVNULL,  # suppress output as ffplay prints an unwanted newline
         )
     except subprocess.CalledProcessError as e:
-        raise PlaysoundException(f"ffplay failed to play sound: {e}")
+        raise PlaysoundException(f"ffplay failed to play sound: {e}") from e
     logger.debug("ffplay: finishing play %s", sound)
 
 
@@ -155,14 +155,14 @@ def _playsound_alsa(sound: str) -> None:
         try:
             subprocess.run(["aplay", "--quiet", sound], check=True)
         except subprocess.CalledProcessError as e:
-            raise PlaysoundException(f"aplay failed to play sound: {e}")
+            raise PlaysoundException(f"aplay failed to play sound: {e}") from e
         logger.debug("alsa: finishing play %s", sound)
     elif suffix == ".mp3":
         logger.debug("mpg123: starting playing %s", sound)
         try:
             subprocess.run(["mpg123", "-q", sound], check=True)
         except subprocess.CalledProcessError as e:
-            raise PlaysoundException(f"mpg123 failed to play sound: {e}")
+            raise PlaysoundException(f"mpg123 failed to play sound: {e}") from e
         logger.debug("mpg123: finishing play %s", sound)
     else:
         raise PlaysoundException(f"Backend not supported for {suffix} files")
@@ -175,18 +175,18 @@ def _playsound_gst_legacy(sound: str) -> None:
         sound = "file://" + urllib.request.pathname2url(sound)
 
     try:
-        import gi
-    except ImportError:
-        raise PlaysoundException("PyGObject not found. Run 'pip install pygobject'")
+        import gi  # type: ignore
+    except ImportError as e:
+        raise PlaysoundException("PyGObject not found. Run 'pip install pygobject'") from e
 
     # Silences gi warning
     gi.require_version("Gst", "1.0")
 
     try:
         # Gst will be available only if GStreamer is installed
-        from gi.repository import Gst
-    except ImportError:
-        raise PlaysoundException("GStreamer not found. Install GStreamer on your system")
+        from gi.repository import Gst  # type: ignore
+    except ImportError as e:
+        raise PlaysoundException("GStreamer not found. Install GStreamer on your system") from e
 
     Gst.init(None)
 
@@ -231,8 +231,8 @@ def _playsound_mci_winmm(sound: str) -> None:
 
 
 def _playsound_wmplayer(sound: str) -> None:
-    import pythoncom
-    import win32com.client
+    import pythoncom  # type: ignore
+    import win32com.client  # type: ignore
 
     logger.debug("wmplayer: starting playing %s", sound)
 
@@ -257,7 +257,7 @@ def _playsound_afplay(sound: str) -> None:
     try:
         subprocess.run(["afplay", sound], check=True)
     except subprocess.CalledProcessError as e:
-        raise PlaysoundException(f"afplay failed to play sound: {e}")
+        raise PlaysoundException(f"afplay failed to play sound: {e}") from e
     logger.debug("afplay: finishing play %s", sound)
 
 

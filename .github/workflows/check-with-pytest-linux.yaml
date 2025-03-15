@@ -1,25 +1,21 @@
-name: Install locally and run pytest on Linux
+name: install locally and run pytest on Linux
 
 on:
   push:
-    branches: ["main"]
+    branches: [ "main" ]
   pull_request:
-    branches: ["main"]
+    branches: [ "main" ]
 
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        python-version: [ "3.7", "3.8", "3.9", "3.10", "3.11", "3.12", "3.13" ]
 
     steps:
-      #      - name: Setup GStreamer
-      #        id: setup_gstreamer
-      #        uses: blinemedical/setup-gstreamer@v1.4.0
-      # TODO(Martin): Migrate to pipewire-pulse
-      - name: Start PulseAudio server - TODO migrate to pipewire-pulse!
+      - name: Start PulseAudio server
         run: |
           sudo apt-get update
           sudo apt-get -y install pulseaudio pulseaudio-utils
