@@ -1,5 +1,7 @@
 import urllib.error
+
 import pytest
+
 from playsound3 import playsound
 from playsound3.playsound3 import PlaysoundException
 
