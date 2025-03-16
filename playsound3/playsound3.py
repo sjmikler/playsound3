@@ -128,8 +128,8 @@ class _WMPlayerFakePopen:
 
     def play(self, sound: str) -> None:
         try:
-            import win32com.client  # type: ignore
             import pythoncom  # type: ignore
+            import win32com.client  # type: ignore
         except ImportError as e:
             raise PlaysoundException("pywin32 required to use the 'wmplayer' backend.") from e
 
