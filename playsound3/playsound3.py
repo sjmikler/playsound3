@@ -251,7 +251,7 @@ def playsound(
     Args:
         sound: Path or URL to the sound file. Can be a string or pathlib.Path.
         block: If True, the function will block execution until the sound finishes playing.
-               If False, sound will play in a background thread.
+               If False, sound will play in background.
         backend: Name of the audio backend to use. Leave None for automatic selection.
 
     Returns:
