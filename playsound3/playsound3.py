@@ -142,6 +142,7 @@ class Wmplayer(SoundBackend):
     """Windows Media Player backend for Windows."""
 
     def check(self) -> bool:
+        # The recommended way to check for missing library
         if find_spec("pythoncom") is None:
             return False
 

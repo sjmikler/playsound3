@@ -24,10 +24,10 @@ class WmplayerPopen:
 
     def _play(self, sound: str) -> None:
         try:
-            import pythoncom
+            import pythoncom  # type: ignore
             import win32com.client  # type: ignore
         except ImportError as e:
-            raise PlaysoundException("pywin32 required to use the 'wmplayer' backend.") from e
+            raise PlaysoundException("Install 'pywin32' to use the 'wmplayer' backend.") from e
 
         logger.debug("wmplayer: start play %s", sound)
 
@@ -75,7 +75,7 @@ class WinmmPopen:
         try:
             import ctypes
         except ImportError as e:
-            raise PlaysoundException("ctypes required to use the 'winmm' backend") from e
+            raise PlaysoundException("Install 'ctypes' to use the 'winmm' backend") from e
 
         winmm = ctypes.WinDLL("winmm.dll")
         buffer = ctypes.create_unicode_buffer(255)  # Unicode buffer for wide characters
@@ -83,7 +83,7 @@ class WinmmPopen:
 
         if error_code:
             logger.error("MCI error code: %s", error_code)
-            raise RuntimeError("WinMM was not able to play the file!")
+            raise RuntimeError("winmm was not able to play the file!")
         return buffer.value
 
     def _playsound_mci_winmm(self, sound: str) -> None:
@@ -105,9 +105,9 @@ class WinmmPopen:
         logger.debug("winmm: finishing play %s", sound)
 
     def _play(self, sound: str) -> None:
-        logger.debug("MCI: start play %s", sound)
+        logger.debug("winmm: start play %s", sound)
         self._playsound_mci_winmm(sound)
-        logger.debug("wmplayer: finish play %s", sound)
+        logger.debug("winmm: finish play %s", sound)
 
     def send_signal(self, sig: int) -> None:
         self._playing = False
