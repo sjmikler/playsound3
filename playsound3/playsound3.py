@@ -97,11 +97,12 @@ def _check_wmplayer_exists() -> bool:
 
 
 def _check_afplay_exists() -> bool:
-    try:
-        subprocess.run(["afplay", "-h"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
-        return True
-    except FileNotFoundError:
-        return False
+    return True
+    # try:
+    #     subprocess.run(["afplay", "-h"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+    #     return True
+    # except FileNotFoundError:
+    #     return False
 
 
 def _select_default_backend() -> str:
