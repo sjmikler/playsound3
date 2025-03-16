@@ -57,9 +57,9 @@ def _prepare_path(sound: str | Path) -> str:
     return path.absolute().as_posix()
 
 
-############
-## SOUNDS ##
-############
+####################
+## SOUND BACKENDS ##
+####################
 
 
 def _select_linux_backend() -> str:
@@ -165,32 +165,6 @@ class _WMPlayerFakePopen:
         self.thread.join()
 
 
-class Sound:
-    """Play subprocess-based sound."""
-
-    def __init__(
-        self,
-        name: str,
-        subprocess_factory: Callable[[str], subprocess.Popen],
-        block: bool,
-    ) -> None:
-        """Initialize the player and begin playing."""
-        self.subprocess = subprocess_factory(name)
-
-        if block:
-            self.wait()
-
-    def is_alive(self) -> bool:
-        return self.subprocess.poll() is None
-
-    def wait(self) -> None:
-        self.subprocess.wait()
-
-    def stop(self) -> None:
-        if self.is_alive():
-            self.subprocess.send_signal(signal.SIGINT)
-
-
 def _get_gst_play_subprocess(sound) -> subprocess.Popen:
     return subprocess.Popen(["gst-play-1.0", "--no-interactive", "--quiet", sound])
 
@@ -220,6 +194,37 @@ def _get_ffplay_subprocess(sound) -> subprocess.Popen:
 
 def _get_wmplayer_subprocess(sound) -> _WMPlayerFakePopen:
     return _WMPlayerFakePopen(sound)
+
+
+################
+## PLAYSOUND  ##
+################
+
+
+class Sound:
+    """Play subprocess-based sound."""
+
+    def __init__(
+        self,
+        name: str,
+        subprocess_factory: Callable[[str], subprocess.Popen],
+        block: bool,
+    ) -> None:
+        """Initialize the player and begin playing."""
+        self.subprocess = subprocess_factory(name)
+
+        if block:
+            self.wait()
+
+    def is_alive(self) -> bool:
+        return self.subprocess.poll() is None
+
+    def wait(self) -> None:
+        self.subprocess.wait()
+
+    def stop(self) -> None:
+        if self.is_alive():
+            self.subprocess.send_signal(signal.SIGINT)
 
 
 def playsound(
