@@ -238,7 +238,7 @@ class Sound:
 
     def stop(self) -> None:
         if self.is_alive():
-            self.subprocess.send_signal(signal.SIGINT)
+            self.subprocess.send_signal(signal.CTRL_C_EVENT)  # SIGINT not working on Windows
 
 
 def playsound(
