@@ -50,7 +50,7 @@ class WmplayerPopen:
         self._playing = False
         logger.debug("wmplayer: finish play %s", sound)
 
-    def send_signal(self, _sig: int) -> None:
+    def send_signal(self, sig: int) -> None:
         self._playing = False
 
     def poll(self) -> int | None:
@@ -103,7 +103,7 @@ class WinmmPopen:
         self._playsound_mci_winmm(sound)
         logger.debug("wmplayer: finish play %s", sound)
 
-    def send_signal(self, _sig: int) -> None:
+    def send_signal(self, sig: int) -> None:
         """Stop the currently playing sound."""
         if self.alias is None:
             return
