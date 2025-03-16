@@ -6,6 +6,7 @@ import os
 import signal
 import ssl
 import subprocess
+import shutil
 import sys
 import tempfile
 import time
@@ -97,12 +98,9 @@ def _check_wmplayer_exists() -> bool:
 
 
 def _check_afplay_exists() -> bool:
-    return True
-    # try:
-    #     subprocess.run(["afplay", "-h"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
-    #     return True
-    # except FileNotFoundError:
-    #     return False
+    # For some reason successful afplay -h returns non-zero status
+    # So we use a different shutil to test if afplay exists
+    return shutil.which("afplay") is not None
 
 
 def _select_default_backend() -> str:
