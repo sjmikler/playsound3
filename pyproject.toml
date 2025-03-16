@@ -46,7 +46,7 @@ Issues = "https://github.com/sjmikler/playsound3/issues"
 Documentation = "https://github.com/sjmikler/playsound3?tab=readme-ov-file#documentation"
 
 [tool.hatch.version]
-path = "progress_table/__init__.py"
+path = "playsound3/__init__.py"
 
 [tool.hatch.build.targets.sdist]
 include = ["playsound3", "README.md"]
