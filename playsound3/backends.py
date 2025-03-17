@@ -127,10 +127,15 @@ class AppkitPopen:
         nsurl: Any = NSURL.fileURLWithPath_(sound)
         nssound = NSSound.alloc().initWithContentsOfURL_byReference_(nsurl, True)
         nssound.play()
+        
+        t0 = time.perf_counter()
         d = nssound.duration()
 
-        while self._playing and nssound.isPlaying():
+        while self._playing:
             time.sleep(WAIT_TIME)
+            t1 = time.perf_counter()
+            if (t1 - t0) > d:
+                break
 
         nssound.stop()
         self._playing = False
