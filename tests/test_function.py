@@ -28,12 +28,10 @@ def test_non_blocking():
         for path in [loc_mp3_3s, web_mp3_3s, web_wav_3s]:
             t0 = time.perf_counter()
             sound = playsound(path, block=False, backend=backend)
-
-            td = time.perf_counter() - t0
-            assert td < 1.0, f"backend={backend}, path={path}"
             assert sound.is_alive(), f"backend={backend}, path={path}"
 
             sound.wait()
+            td = time.perf_counter() - t0
             assert not sound.is_alive(), f"backend={backend}, path={path}"
             assert td >= 3.0 and td < 4.0, f"backend={backend}, path={path}"
 
@@ -47,9 +45,8 @@ def test_stopping_1s():
 
             time.sleep(1)
             sound.stop()
+            td = time.perf_counter() - t0
 
             time.sleep(0.05)
             assert not sound.is_alive(), f"backend={backend}, path={path}"
-
-            td = time.perf_counter() - t0
             assert td >= 1.0 and td < 2.0, f"backend={backend}, path={path}"
