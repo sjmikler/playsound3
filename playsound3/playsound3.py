@@ -5,6 +5,7 @@ import logging
 import os
 import shutil
 import signal
+import sys
 import subprocess
 import tempfile
 import urllib.error
@@ -27,9 +28,8 @@ logger = logging.getLogger(__name__)
 class PlaysoundException(Exception):
     pass
 
-
 # Windows uses CTRL_C_EVENT, while Unix uses SIGINT
-_SIGINT = signal.CTRL_C_EVENT if os.name == "win32" else signal.SIGINT
+_SIGINT = signal.CTRL_C_EVENT if sys.platform == "win32" else signal.SIGINT
 
 ####################
 ## DOWNLOAD TOOLS ##
@@ -319,10 +319,10 @@ atexit.register(_remove_cached_downloads, _DOWNLOAD_CACHE)
 
 _BACKEND_PREFERENCE = [
     "gstreamer",  # Linux; should be installed on every distro
+    "wmplayer",  # Windows; requires pywin32 -- should be workign well on Windows
     "ffplay",  # Multiplatform; requires ffmpeg
     "appkit",  # macOS; requires PyObjC dependency
     "afplay",  # macOS; should be installed on every macOS
-    "wmplayer",  # Windows; requires pywin32 -- should be workign well on Windows
     "winmm",  # Windows; should be installed on every Windows, but is quirky with variable bitrate MP3s
     "alsa",  # Linux; only supports .mp3 and .wav and might not be installed
 ]
