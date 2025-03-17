@@ -74,7 +74,7 @@ print(AVAILABLE_BACKENDS)  # for example: ["gstreamer", "ffmpeg", ...]
 print(DEFAULT_BACKEND)  # "gstreamer"
 ```
 
-## Sound
+### Sound
 
 `playsound` returns a `Sound` object for playback control:
 
