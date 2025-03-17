@@ -43,7 +43,7 @@ dependencies = [
 [project.urls]
 Home = "https://github.com/sjmikler/playsound3"
 Issues = "https://github.com/sjmikler/playsound3/issues"
-Documentation = "https://github.com/sjmikler/playsound3?tab=readme-ov-file#documentation"
+Documentation = "https://github.com/sjmikler/playsound3/blob/main/README.md#quick-start"
 
 [tool.hatch.version]
 path = "playsound3/__init__.py"
