@@ -50,7 +50,16 @@ jobs:
               gstreamer1.0-gtk3 \
               gstreamer1.0-qt5 \
               gstreamer1.0-pulseaudio
-          gst-inspect-1.0
+          gst-inspect-1.0 --version
+      - name: Setup FFmpeg
+        run: |
+          sudo apt-get -y install ffmpeg
+          ffmpeg -version
+      - name: Setup ALSA tools
+        run: |
+          sudo apt-get -y install mpg123 alsa-utils
+          mpg123 --version
+          aplay --version
       - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
