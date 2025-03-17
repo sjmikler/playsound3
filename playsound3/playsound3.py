@@ -230,13 +230,18 @@ def _auto_select_backend() -> str | None:
 
 
 class Sound:
-    """Play subprocess-based sound."""
+    """Subprocess-based sound object.
+
+    Attributes:
+        backend: The name of the backend used to play the sound.
+        subprocess: The subprocess object used to play the sound.
+    """
 
     def __init__(
         self,
         name: str,
-        backend: SoundBackend,
         block: bool,
+        backend: SoundBackend,
     ) -> None:
         """Initialize the player and begin playing."""
         self.backend: str = str(type(backend)).lower()
@@ -246,12 +251,22 @@ class Sound:
             self.wait()
 
     def is_alive(self) -> bool:
+        """Check if the sound is still playing.
+
+        Returns:
+            True if the sound is still playing, else False.
+        """
         return self.subprocess.poll() is None
 
     def wait(self) -> None:
+        """Block until the sound finishes playing.
+
+        This only makes sense for non-blocking sounds.
+        """
         self.subprocess.wait()
 
     def stop(self) -> None:
+        """Stop the sound."""
         if self.is_alive():
             self.subprocess.send_signal(_SIGINT)
 
@@ -261,18 +276,17 @@ def playsound(
     block: bool = True,
     backend: str | None | SoundBackend | type[SoundBackend] = None,
 ) -> Sound:
-    """Play a sound file using an audio backend availabile in your system.
+    """Play a sound file using an available audio backend.
 
     Args:
-        sound: Path or URL to the sound file. Can be a string or pathlib.Path.
-        block: If True, the function will block execution until the sound finishes playing.
-               If False, sound will play in background.
-        backend: Name of the audio backend to use. Leave None for automatic selection.
+        sound: Path or URL of the sound file (string or pathlib.Path).
+        block:
+            - `True` (default): Wait until sound finishes playing.
+            - `False`: Play sound in the background.
+        backend: Specific audio backend to use. Leave None for automatic selection.
 
     Returns:
-        If `block` is True, the function will return None after the sound finishes playing.
-        If `block` is False, the function will return the background thread object.
-
+        Sound object for controlling playback.
     """
     path = _prepare_path(sound)
     backend = backend or DEFAULT_BACKEND
@@ -288,7 +302,7 @@ def playsound(
         backend_obj = backend()
     else:
         raise TypeError(f"invalid backend type '{type(backend)}'")
-    return Sound(path, backend_obj, block)
+    return Sound(path, block, backend_obj)
 
 
 def _remove_cached_downloads(cache: dict[str, str]) -> None:
@@ -304,8 +318,8 @@ def _remove_cached_downloads(cache: dict[str, str]) -> None:
 atexit.register(_remove_cached_downloads, _DOWNLOAD_CACHE)
 
 _BACKEND_PREFERENCE = [
-    "gstreamer",  # Linux; should be installed on every Linux
-    "ffplay",  # Multi; requires ffmpeg
+    "gstreamer",  # Linux; should be installed on every distro
+    "ffplay",  # Multiplatform; requires ffmpeg
     "appkit",  # macOS; requires PyObjC dependency
     "afplay",  # macOS; should be installed on every macOS
     "wmplayer",  # Windows; requires pywin32 -- should be workign well on Windows
