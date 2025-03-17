@@ -52,19 +52,7 @@ def playsound(
     sound: str | Path,
     block: bool = True,
     backend: str | None | SoundBackend | type[SoundBackend] = None,
-) -> Sound:
-    """Play a sound file using an available audio backend.
-
-    Args:
-        sound: Path or URL of the sound file (string or pathlib.Path).
-        block:
-            - `True` (default): Wait until sound finishes playing.
-            - `False`: Play sound in the background.
-        backend: Specific audio backend to use. Leave None for automatic selection.
-
-    Returns:
-        Sound object for controlling playback.
-    """
+) -> Sound
 ```
 
 `sound` (required) \
@@ -75,7 +63,7 @@ Determines whether the sound plays synchronously (blocking) or asynchronously (b
 
 `backend` (optional, default=`None`) \
 Specify which audio backend to use.
-If you leave a default value `None`, best backend will be determined automatically.
+If `None`, the best backend is determined automatically.
 
 To see a list of backends supported by your system:
 
