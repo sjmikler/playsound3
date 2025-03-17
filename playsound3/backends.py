@@ -3,6 +3,7 @@ from __future__ import annotations
 import time
 import uuid
 from threading import Thread
+from typing import Any
 
 WAIT_TIME: float = 0.02
 
@@ -119,10 +120,12 @@ class AppkitPopen:
     def _play(self, sound: str) -> None:
         try:
             from AppKit import NSSound  # type: ignore
+            from Foundation import NSURL  # type: ignore
         except ImportError as e:
             raise PlaysoundException("Install 'PyObjC' to use 'appkit' backend.") from e
 
-        nssound = NSSound.alloc().initWithContentsOfURL_byReference_(sound, True)
+        nsurl: Any = NSURL.fileURLWithPath_(sound)
+        nssound = NSSound.alloc().initWithContentsOfURL_byReference_(nsurl, True)
         while self._playing and nssound.isPlaying:
             time.sleep(WAIT_TIME)
 

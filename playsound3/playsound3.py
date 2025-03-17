@@ -198,6 +198,7 @@ class Appkit(SoundBackend):
     def check(self) -> bool:
         try:
             from AppKit import NSSound  # type: ignore # noqa: F401
+            from Foundation import NSURL  # type: ignore # noqa: F401
 
             return True
         except ImportError:
