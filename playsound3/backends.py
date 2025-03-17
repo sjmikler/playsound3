@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-import logging
 import time
 import uuid
 from threading import Thread
-
 
 WAIT_TIME: float = 0.02
 
@@ -73,7 +71,7 @@ class WinmmPopen:
         except ImportError as e:
             raise PlaysoundException("Install 'ctypes' to use the 'winmm' backend") from e
 
-        winmm = ctypes.WinDLL("winmm.dll")
+        winmm = ctypes.WinDLL("winmm.dll")  # type: ignore
         buffer = ctypes.create_unicode_buffer(255)  # Unicode buffer for wide characters
         error_code = winmm.mciSendStringW(ctypes.c_wchar_p(command), buffer, 254, 0)
 

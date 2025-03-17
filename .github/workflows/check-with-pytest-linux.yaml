@@ -61,6 +61,10 @@ jobs:
           pip install .
           pip install pytest
 
+      - name: Check available backends
+        run: |
+          python -c "import playsound3; print(playsound3.AVAILABLE_BACKENDS)"
+
       - name: Test with pytest
         run: |
           timeout 60 pytest tests --log-cli-level=WARNING -vv
