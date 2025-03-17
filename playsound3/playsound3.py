@@ -5,7 +5,6 @@ import logging
 import os
 import shutil
 import signal
-import ssl
 import subprocess
 import tempfile
 import urllib.error
@@ -13,9 +12,12 @@ import urllib.request
 from abc import ABC, abstractmethod
 from importlib.util import find_spec
 from pathlib import Path
-from typing import Protocol
 
-import certifi
+try:
+    from typing import Protocol
+except ImportError:
+    # Python 3.7 compatibility
+    from typing_extensions import Protocol
 
 from playsound3 import backends
 
@@ -40,8 +42,8 @@ def _download_sound_from_web(link: str, destination: Path) -> None:
     # Identifies itself as a browser to avoid HTTP 403 errors
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64)"}
     request = urllib.request.Request(link, headers=headers)
-    context = ssl.create_default_context(cafile=certifi.where())
-    with urllib.request.urlopen(request, context=context) as response, destination.open("wb") as out_file:
+
+    with urllib.request.urlopen(request) as response, destination.open("wb") as out_file:
         out_file.write(response.read())
 
 

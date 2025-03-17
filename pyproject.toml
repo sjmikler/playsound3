@@ -36,9 +36,9 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "certifi",
     "pywin32; sys_platform == 'win32'",
     "PyObjC; sys_platform == 'darwin'",
+    "typing-extensions; python_version < '3.8'",
 ]
 
 [project.urls]
