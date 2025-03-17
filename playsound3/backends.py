@@ -126,6 +126,8 @@ class AppkitPopen:
 
         nsurl: Any = NSURL.fileURLWithPath_(sound)
         nssound = NSSound.alloc().initWithContentsOfURL_byReference_(nsurl, True)
+        nssound.play()
+
         while self._playing and nssound.isPlaying:
             time.sleep(WAIT_TIME)
 
