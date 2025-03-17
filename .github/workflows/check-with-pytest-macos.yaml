@@ -29,6 +29,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install .
+          pip install PyObjC
           pip install pytest
 
       - name: Check available backends
