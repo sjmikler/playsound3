@@ -197,7 +197,7 @@ class Appkit(SoundBackend):
 
     def check(self) -> bool:
         try:
-            from AppKit import NSSound  # type: ignore
+            from AppKit import NSSound  # type: ignore # noqa: F401
 
             return True
         except ImportError:
@@ -220,15 +220,7 @@ def _auto_select_backend() -> str | None:
         # Allow users to override the automatic backend choice
         return os.environ["PLAYSOUND3_BACKEND"]
 
-    preference_order = [
-        "gstreamer",
-        "ffplay",
-        "afplay",
-        "wmplayer",
-        "winmm",
-        "alsa",  # only supports .mp3 and .wav
-    ]
-    for backend in preference_order:
+    for backend in _BACKEND_PREFERENCE:
         if backend in AVAILABLE_BACKENDS:
             return backend
 
@@ -310,10 +302,22 @@ def _remove_cached_downloads(cache: dict[str, str]) -> None:
 
 atexit.register(_remove_cached_downloads, _DOWNLOAD_CACHE)
 
+_BACKEND_PREFERENCE = [
+    "gstreamer",  # Linux; should be installed on every Linux
+    "ffplay",  # Multi; requires ffmpeg
+    "appkit",  # macOS; requires PyObjC dependency
+    "afplay",  # macOS; should be installed on every macOS
+    "wmplayer",  # Windows; requires pywin32 -- should be workign well on Windows
+    "winmm",  # Windows; should be installed on every Windows, but is quirky with variable bitrate MP3s
+    "alsa",  # Linux; only supports .mp3 and .wav and might not be installed
+]
+
 _BACKEND_MAP: dict[str, SoundBackend] = {
     name.lower(): obj()
     for name, obj in globals().items()
     if isinstance(obj, type) and issubclass(obj, SoundBackend) and obj is not SoundBackend
 }
-AVAILABLE_BACKENDS: list[str] = [name for name, backend in _BACKEND_MAP.items() if backend.check()]
+
+assert sorted(_BACKEND_PREFERENCE) == sorted(_BACKEND_MAP.keys()), "forgot to update _BACKEND_PREFERENCE?"
+AVAILABLE_BACKENDS: list[str] = [name for name in _BACKEND_PREFERENCE if _BACKEND_MAP[name].check()]
 DEFAULT_BACKEND: str | None = _auto_select_backend()

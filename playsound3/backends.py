@@ -120,7 +120,7 @@ class AppkitPopen:
         try:
             from AppKit import NSSound  # type: ignore
         except ImportError as e:
-            raise PlaysoundException("Install 'AppKit' to use this backend.") from e
+            raise PlaysoundException("Install 'PyObjC' to use 'appkit' backend.") from e
 
         nssound = NSSound.alloc().initWithContentsOfURL_byReference_(sound, True)
         while self._playing and nssound.isPlaying:
