@@ -196,10 +196,12 @@ class Appkit(SoundBackend):
     """Appkit backend for macOS."""
 
     def check(self) -> bool:
-        if not find_spec("AppKit") or not find_spec("AppKit.NSSound"):
-            return False
+        try:
+            from AppKit import NSSound  # type: ignore
 
-        return True
+            return True
+        except ImportError:
+            return False
 
     def play(self, sound: str) -> backends.AppkitPopen:
         return backends.AppkitPopen(sound)
