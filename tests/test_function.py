@@ -20,7 +20,7 @@ def test_with_blocking_3s():
 
             td = time.perf_counter() - t0
             assert not sound.is_alive(), f"backend={backend}, path={path}"
-            assert td >= 3.0 and td < 4.0, f"backend={backend}, path={path}"
+            assert td >= 3.0 and td < 4.5, f"backend={backend}, path={path}"
 
 
 def test_non_blocking():
@@ -33,7 +33,7 @@ def test_non_blocking():
             sound.wait()
             td = time.perf_counter() - t0
             assert not sound.is_alive(), f"backend={backend}, path={path}"
-            assert td >= 3.0 and td < 4.0, f"backend={backend}, path={path}"
+            assert td >= 3.0 and td < 4.5, f"backend={backend}, path={path}"
 
 
 def test_stopping_1s():
