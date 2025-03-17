@@ -26,6 +26,9 @@ class PlaysoundException(Exception):
     pass
 
 
+# Windows uses CTRL_C_EVENT, while Unix uses SIGINT
+_SIGINT = signal.CTRL_C_EVENT if os.name == "win32" else signal.SIGINT
+
 ####################
 ## DOWNLOAD TOOLS ##
 ####################
@@ -187,12 +190,28 @@ class Afplay(SoundBackend):
         return subprocess.Popen(["afplay", sound])
 
 
+class Appkit(SoundBackend):
+    """Appkit backend for macOS."""
+
+    def check(self) -> bool:
+        if find_spec("AppKit.NSSound") is None:
+            return False
+        else:
+            return True
+
+    def play(self, sound: str) -> backends.AppkitPopen:
+        return backends.AppkitPopen(sound)
+
+
 ################
 ## PLAYSOUND  ##
 ################
 
+_NO_BACKEND_MESSAGE = """no supported audio backends on this system!
+Please create an issue on https://github.com/sjmikler/playsound3/issues."""
 
-def _auto_select_backend() -> str:
+
+def _auto_select_backend() -> str | None:
     if "PLAYSOUND3_BACKEND" in os.environ:
         # Allow users to override the automatic backend choice
         return os.environ["PLAYSOUND3_BACKEND"]
@@ -206,13 +225,11 @@ def _auto_select_backend() -> str:
         "alsa",  # only supports .mp3 and .wav
     ]
     for backend in preference_order:
-        if backend in SUPPORTED_BACKENDS:
+        if backend in AVAILABLE_BACKENDS:
             return backend
 
-    raise PlaysoundException(
-        """no supported audio backends on this system!
-    Please create an issue on https://github.com/sjmikler/playsound3/issues."""
-    )
+    logging.warning(_NO_BACKEND_MESSAGE)
+    return None
 
 
 class Sound:
@@ -239,7 +256,7 @@ class Sound:
 
     def stop(self) -> None:
         if self.is_alive():
-            self.subprocess.send_signal(signal.CTRL_C_EVENT)  # SIGINT not working on Windows
+            self.subprocess.send_signal(_SIGINT)
 
 
 def playsound(
@@ -262,9 +279,11 @@ def playsound(
     """
     path = _prepare_path(sound)
     backend = backend or DEFAULT_BACKEND
+    if backend is None:
+        raise PlaysoundException(_NO_BACKEND_MESSAGE)
 
     if isinstance(backend, str):
-        assert backend in SUPPORTED_BACKENDS, f"Unsupported backend: {backend}"
+        assert backend in AVAILABLE_BACKENDS, f"Unsupported backend: {backend}"
         backend_obj = _BACKEND_MAP[backend]
     elif isinstance(backend, SoundBackend):
         backend_obj = backend
@@ -285,8 +304,6 @@ def _remove_cached_downloads(cache: dict[str, str]) -> None:
 ## INITIALIZATION ##
 ####################
 
-path = "devel/sample-3s.mp3"
-
 atexit.register(_remove_cached_downloads, _DOWNLOAD_CACHE)
 
 _BACKEND_MAP: dict[str, SoundBackend] = {
@@ -294,6 +311,5 @@ _BACKEND_MAP: dict[str, SoundBackend] = {
     for name, obj in globals().items()
     if isinstance(obj, type) and issubclass(obj, SoundBackend) and obj is not SoundBackend
 }
-AVAILABLE_BACKENDS: list[str] = list(_BACKEND_MAP)
-SUPPORTED_BACKENDS: list[str] = [name for name, backend in _BACKEND_MAP.items() if backend.check()]
-DEFAULT_BACKEND: str = _auto_select_backend()
+AVAILABLE_BACKENDS: list[str] = [name for name, backend in _BACKEND_MAP.items() if backend.check()]
+DEFAULT_BACKEND: str | None = _auto_select_backend()
