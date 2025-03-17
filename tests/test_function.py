@@ -50,3 +50,26 @@ def test_stopping_1s():
             time.sleep(0.05)
             assert not sound.is_alive(), f"backend={backend}, path={path}"
             assert td >= 1.0 and td < 2.0, f"backend={backend}, path={path}"
+
+
+def test_multiple():
+    for backend in AVAILABLE_BACKENDS:
+        t0 = time.perf_counter()
+        sounds = [
+            playsound(loc_mp3_3s, block=False, backend=backend),
+            playsound(web_mp3_3s, block=False, backend=backend),
+            playsound(web_wav_3s, block=False, backend=backend),
+        ]
+        for sound in sounds:
+            assert sound.is_alive(), f"backend={backend}"
+        time.sleep(1)
+
+        for sound in sounds:
+            assert sound.is_alive(), f"backend={backend}"
+            sound.stop()
+        td = time.perf_counter() - t0
+
+        time.sleep(0.05)
+        for sound in sounds:
+            assert not sound.is_alive(), f"backend={backend}"
+        assert td >= 1.0 and td < 2.0, f"backend={backend}"
