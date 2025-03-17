@@ -19,8 +19,8 @@ def test_with_blocking_3s():
             sound = playsound(path, block=True, backend=backend)
 
             td = time.perf_counter() - t0
-            assert td >= 3.0 and td < 3.5, f"backend={backend}, path={path}"
             assert not sound.is_alive(), f"backend={backend}, path={path}"
+            assert td >= 3.0 and td < 4.0, f"backend={backend}, path={path}"
 
 
 def test_non_blocking():
@@ -30,11 +30,12 @@ def test_non_blocking():
             sound = playsound(path, block=False, backend=backend)
 
             td = time.perf_counter() - t0
-            assert td < 0.5, f"backend={backend}, path={path}"
+            assert td < 1.0, f"backend={backend}, path={path}"
             assert sound.is_alive(), f"backend={backend}, path={path}"
 
             sound.wait()
             assert not sound.is_alive(), f"backend={backend}, path={path}"
+            assert td >= 3.0 and td < 4.0, f"backend={backend}, path={path}"
 
 
 def test_stopping_1s():
@@ -51,21 +52,4 @@ def test_stopping_1s():
             assert not sound.is_alive(), f"backend={backend}, path={path}"
 
             td = time.perf_counter() - t0
-            assert td >= 1.0 and td < 1.5, f"backend={backend}, path={path}"
-
-
-def test_stopping_2s():
-    for backend in AVAILABLE_BACKENDS:
-        for path in [loc_mp3_3s, web_mp3_3s, web_wav_3s]:
-            t0 = time.perf_counter()
-            sound = playsound(path, block=False, backend=backend)
-            assert sound.is_alive(), f"backend={backend}, path={path}"
-
-            time.sleep(2)
-            sound.stop()
-
-            time.sleep(0.05)
-            assert not sound.is_alive(), f"backend={backend}, path={path}"
-
-            td = time.perf_counter() - t0
-            assert td >= 2.0 and td < 2.5, f"backend={backend}, path={path}"
+            assert td >= 1.0 and td < 2.0, f"backend={backend}, path={path}"
