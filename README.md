@@ -71,7 +71,7 @@ To see a list of backends supported by your system:
 from playsound3 import AVAILABLE_BACKENDS, DEFAULT_BACKEND
 
 print(AVAILABLE_BACKENDS)  # for example: ["gstreamer", "ffmpeg", ...]
-print(DEFAULT_BACKEND)  # "gstreamer"
+print(DEFAULT_BACKEND)  # for example: "gstreamer"
 ```
 
 ### Sound
