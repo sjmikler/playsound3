@@ -2,77 +2,44 @@ from __future__ import annotations
 
 import atexit
 import logging
-import ssl
+import os
+import shutil
 import subprocess
-import sys
 import tempfile
-import time
 import urllib.error
 import urllib.request
+from abc import ABC, abstractmethod
+from importlib.util import find_spec
 from pathlib import Path
-from threading import Thread
-from typing import TYPE_CHECKING, Any, Callable
 
-# Satisfy mypy
-if TYPE_CHECKING or sys.platform == "win32":
-    import ctypes
-    import uuid
+try:
+    from typing import Protocol
+except ImportError:
+    # Python 3.7 compatibility
+    from typing_extensions import Protocol
 
-import certifi
+from playsound3 import backends
 
 logger = logging.getLogger(__name__)
-
-_DOWNLOAD_CACHE = {}
 
 
 class PlaysoundException(Exception):
     pass
 
 
-def playsound(
-    sound: str | Path,
-    block: bool = True,
-    backend: str | None = None,
-    daemon: bool = True,
-) -> Thread | None:
-    """Play a sound file using an audio backend availabile in your system.
+####################
+## DOWNLOAD TOOLS ##
+####################
 
-    Args:
-        sound: Path or URL to the sound file. Can be a string or pathlib.Path.
-        block: If True, the function will block execution until the sound finishes playing.
-               If False, sound will play in a background thread.
-        backend: Name of the audio backend to use. Use None for automatic selection.
-        daemon: If True, and `block` is True, the background thread will be a daemon thread.
-                This means that the thread will stay alive even after the main program exits.
-
-    Returns:
-        If `block` is True, the function will return None after the sound finishes playing.
-        If `block` is False, the function will return the background thread object.
-
-    """
-    if backend is None:
-        _play = _PLAYSOUND_DEFAULT_BACKEND
-    elif backend in _BACKEND_MAPPING:
-        _play = _BACKEND_MAPPING[backend]
-    else:
-        raise PlaysoundException(f"Unknown backend: {backend}. Available backends: {', '.join(AVAILABLE_BACKENDS)}")
-
-    path = _prepare_path(sound)
-    if block:
-        _play(path)
-    else:
-        thread = Thread(target=_play, args=(path,), daemon=daemon)
-        thread.start()
-        return thread
-    return None
+_DOWNLOAD_CACHE: dict[str, str] = {}
 
 
 def _download_sound_from_web(link: str, destination: Path) -> None:
     # Identifies itself as a browser to avoid HTTP 403 errors
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64)"}
     request = urllib.request.Request(link, headers=headers)
-    context = ssl.create_default_context(cafile=certifi.where())
-    with urllib.request.urlopen(request, context=context) as response, destination.open("wb") as out_file:
+
+    with urllib.request.urlopen(request) as response, destination.open("wb") as out_file:
         out_file.write(response.read())
 
 
@@ -93,182 +60,244 @@ def _prepare_path(sound: str | Path) -> str:
     return path.absolute().as_posix()
 
 
-def _select_linux_backend() -> Callable[[str], None]:
-    """Select the best available audio backend for Linux systems."""
-    logger.info("Selecting the best available audio backend for Linux systems.")
-
-    try:
-        subprocess.run(["gst-play-1.0", "--version"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
-        logger.info("Using gst-play-1.0 as the audio backend.")
-        return _playsound_gst_play
-    except FileNotFoundError:
-        pass
-
-    try:
-        subprocess.run(["ffplay", "-version"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
-        logger.info("Using ffplay as the audio backend.")
-        return _playsound_ffplay
-    except FileNotFoundError:
-        pass
-
-    try:
-        subprocess.run(["aplay", "--version"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
-        subprocess.run(["mpg123", "--version"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
-        logger.info("Using aplay and mpg123 as the audio backend.")
-        return _playsound_alsa
-    except FileNotFoundError:
-        pass
-
-    logger.info("No suitable audio backend found.")
-    raise PlaysoundException("No suitable audio backend found. Install gstreamer or ffmpeg!")
+####################
+## SOUND BACKENDS ##
+####################
 
 
-def _playsound_gst_play(sound: str) -> None:
-    """Uses gst-play-1.0 utility (built-in Linux)."""
-    logger.debug("gst-play-1.0: starting playing %s", sound)
-    try:
-        subprocess.run(["gst-play-1.0", "--no-interactive", "--quiet", sound], check=True)
-    except subprocess.CalledProcessError as e:
-        raise PlaysoundException(f"gst-play-1.0 failed to play sound: {e}")
-    logger.debug("gst-play-1.0: finishing play %s", sound)
+# Imitating subprocess.Popen
+class PopenLike(Protocol):
+    def poll(self) -> int | None: ...
+    def wait(self) -> int: ...
+    def terminate(self) -> None: ...
 
 
-def _playsound_ffplay(sound: str) -> None:
-    """Uses ffplay utility (built-in Linux)."""
-    logger.debug("ffplay: starting playing %s", sound)
-    try:
-        subprocess.run(
-            ["ffplay", "-nodisp", "-autoexit", "-loglevel", "quiet", sound],
-            check=True,
-            stdout=subprocess.DEVNULL,  # suppress output as ffplay prints an unwanted newline
-        )
-    except subprocess.CalledProcessError as e:
-        raise PlaysoundException(f"ffplay failed to play sound: {e}")
-    logger.debug("ffplay: finishing play %s", sound)
+class SoundBackend(ABC):
+    """Abstract class for sound backends."""
+
+    @abstractmethod
+    def check(self) -> bool:
+        raise NotImplementedError("check() must be implemented.")
+
+    @abstractmethod
+    def play(self, sound: str) -> PopenLike:
+        raise NotImplementedError("play() must be implemented.")
 
 
-def _playsound_alsa(sound: str) -> None:
-    """Play a sound using alsa and mpg123 (built-in Linux)."""
-    suffix = Path(sound).suffix
-    if suffix == ".wav":
-        logger.debug("alsa: starting playing %s", sound)
+class Gstreamer(SoundBackend):
+    """Gstreamer backend for Linux."""
+
+    def check(self) -> bool:
         try:
-            subprocess.run(["aplay", "--quiet", sound], check=True)
-        except subprocess.CalledProcessError as e:
-            raise PlaysoundException(f"aplay failed to play sound: {e}")
-        logger.debug("alsa: finishing play %s", sound)
-    elif suffix == ".mp3":
-        logger.debug("mpg123: starting playing %s", sound)
+            subprocess.run(
+                ["gst-play-1.0", "--version"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                check=True,
+            )
+            return True
+        except FileNotFoundError:
+            return False
+
+    def play(self, sound: str) -> subprocess.Popen[bytes]:
+        return subprocess.Popen(["gst-play-1.0", "--no-interactive", "--quiet", sound])
+
+
+class Alsa(SoundBackend):
+    """ALSA backend for Linux."""
+
+    def check(self) -> bool:
         try:
-            subprocess.run(["mpg123", "-q", sound], check=True)
-        except subprocess.CalledProcessError as e:
-            raise PlaysoundException(f"mpg123 failed to play sound: {e}")
-        logger.debug("mpg123: finishing play %s", sound)
+            subprocess.run(["aplay", "--version"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+            subprocess.run(["mpg123", "--version"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+            return True
+        except FileNotFoundError:
+            return False
+
+    def play(self, sound: str) -> subprocess.Popen[bytes]:
+        suffix = Path(sound).suffix
+
+        if suffix == ".wav":
+            return subprocess.Popen(["aplay", "--quiet", sound])
+        elif suffix == ".mp3":
+            return subprocess.Popen(["mpg123", "-q", sound])
+        else:
+            raise PlaysoundException(f"ALSA does not support for {suffix} files.")
+
+
+class Ffplay(SoundBackend):
+    """FFplay backend for systems with ffmpeg installed."""
+
+    def check(self) -> bool:
+        try:
+            subprocess.run(["ffplay", "-version"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+            return True
+        except FileNotFoundError:
+            return False
+
+    def play(self, sound: str) -> subprocess.Popen[bytes]:
+        return subprocess.Popen(["ffplay", "-nodisp", "-autoexit", "-loglevel", "quiet", sound])
+
+
+class Wmplayer(SoundBackend):
+    """Windows Media Player backend for Windows."""
+
+    def check(self) -> bool:
+        # The recommended way to check for missing library
+        if find_spec("pythoncom") is None:
+            return False
+
+        try:
+            import win32com.client  # type: ignore
+
+            _ = win32com.client.Dispatch("WMPlayer.OCX")
+            return True
+        except (ImportError, Exception):
+            # pywintypes.com_error can be raised, which inherits directly from Exception
+            return False
+
+    def play(self, sound: str) -> backends.WmplayerPopen:
+        return backends.WmplayerPopen(sound)
+
+
+class Winmm(SoundBackend):
+    """WinMM backend for Windows."""
+
+    def check(self) -> bool:
+        try:
+            import ctypes
+
+            _ = ctypes.WinDLL("winmm.dll")  # type: ignore
+            return True
+        except (ImportError, FileNotFoundError, AttributeError):
+            return False
+
+    def play(self, sound: str) -> backends.WinmmPopen:
+        return backends.WinmmPopen(sound)
+
+
+class Afplay(SoundBackend):
+    """Afplay backend for macOS."""
+
+    def check(self) -> bool:
+        # For some reason successful 'afplay -h' returns non-zero code
+        # So we must use shutil to test if afplay exists
+        return shutil.which("afplay") is not None
+
+    def play(self, sound: str) -> subprocess.Popen[bytes]:
+        return subprocess.Popen(["afplay", sound])
+
+
+class Appkit(SoundBackend):
+    """Appkit backend for macOS."""
+
+    def check(self) -> bool:
+        try:
+            from AppKit import NSSound  # type: ignore # noqa: F401
+            from Foundation import NSURL  # type: ignore # noqa: F401
+
+            return True
+        except ImportError:
+            return False
+
+    def play(self, sound: str) -> backends.AppkitPopen:
+        return backends.AppkitPopen(sound)
+
+
+################
+## PLAYSOUND  ##
+################
+
+_NO_BACKEND_MESSAGE = """no supported audio backends on this system!
+Please create an issue on https://github.com/sjmikler/playsound3/issues."""
+
+
+def _auto_select_backend() -> str | None:
+    if "PLAYSOUND3_BACKEND" in os.environ:
+        # Allow users to override the automatic backend choice
+        return os.environ["PLAYSOUND3_BACKEND"]
+
+    for backend in _BACKEND_PREFERENCE:
+        if backend in AVAILABLE_BACKENDS:
+            return backend
+
+    logging.warning(_NO_BACKEND_MESSAGE)
+    return None
+
+
+class Sound:
+    """Subprocess-based sound object.
+
+    Attributes:
+        backend: The name of the backend used to play the sound.
+        subprocess: The subprocess object used to play the sound.
+    """
+
+    def __init__(
+        self,
+        name: str,
+        block: bool,
+        backend: SoundBackend,
+    ) -> None:
+        """Initialize the player and begin playing."""
+        self.backend: str = str(type(backend)).lower()
+        self.subprocess: PopenLike = backend.play(name)
+
+        if block:
+            self.wait()
+
+    def is_alive(self) -> bool:
+        """Check if the sound is still playing.
+
+        Returns:
+            True if the sound is still playing, else False.
+        """
+        return self.subprocess.poll() is None
+
+    def wait(self) -> None:
+        """Block until the sound finishes playing.
+
+        This only makes sense for non-blocking sounds.
+        """
+        self.subprocess.wait()
+
+    def stop(self) -> None:
+        """Stop the sound."""
+        self.subprocess.terminate()
+
+
+def playsound(
+    sound: str | Path,
+    block: bool = True,
+    backend: str | None | SoundBackend | type[SoundBackend] = None,
+) -> Sound:
+    """Play a sound file using an available audio backend.
+
+    Args:
+        sound: Path or URL of the sound file (string or pathlib.Path).
+        block:
+            - `True` (default): Wait until sound finishes playing.
+            - `False`: Play sound in the background.
+        backend: Specific audio backend to use. Leave None for automatic selection.
+
+    Returns:
+        Sound object for controlling playback.
+    """
+    path = _prepare_path(sound)
+    backend = backend or DEFAULT_BACKEND
+    if backend is None:
+        raise PlaysoundException(_NO_BACKEND_MESSAGE)
+
+    if isinstance(backend, str):
+        assert backend in AVAILABLE_BACKENDS, f"Unsupported backend: {backend}"
+        backend_obj = _BACKEND_MAP[backend]
+    elif isinstance(backend, SoundBackend):
+        backend_obj = backend
+    elif isinstance(backend, type) and issubclass(backend, SoundBackend):
+        backend_obj = backend()
     else:
-        raise PlaysoundException(f"Backend not supported for {suffix} files")
-
-
-def _playsound_gst_legacy(sound: str) -> None:
-    """Play a sound using gstreamer (built-in Linux)."""
-
-    if not sound.startswith("file://"):
-        sound = "file://" + urllib.request.pathname2url(sound)
-
-    try:
-        import gi
-    except ImportError:
-        raise PlaysoundException("PyGObject not found. Run 'pip install pygobject'")
-
-    # Silences gi warning
-    gi.require_version("Gst", "1.0")
-
-    try:
-        # Gst will be available only if GStreamer is installed
-        from gi.repository import Gst
-    except ImportError:
-        raise PlaysoundException("GStreamer not found. Install GStreamer on your system")
-
-    Gst.init(None)
-
-    playbin = Gst.ElementFactory.make("playbin", "playbin")
-    playbin.props.uri = sound
-
-    logger.debug("gstreamer: starting playing %s", sound)
-    set_result = playbin.set_state(Gst.State.PLAYING)
-    if set_result != Gst.StateChangeReturn.ASYNC:
-        raise PlaysoundException("playbin.set_state returned " + repr(set_result))
-    bus = playbin.get_bus()
-    try:
-        bus.poll(Gst.MessageType.EOS, Gst.CLOCK_TIME_NONE)
-    finally:
-        playbin.set_state(Gst.State.NULL)
-    logger.debug("gstreamer: finishing play %s", sound)
-
-
-def _send_winmm_mci_command(command: str) -> Any:
-    if sys.platform != "win32":
-        raise RuntimeError("WinMM is only available on Windows systems.")
-    winmm = ctypes.WinDLL("winmm.dll")
-    buffer = ctypes.create_unicode_buffer(255)  # Unicode buffer for wide characters
-    error_code = winmm.mciSendStringW(ctypes.c_wchar_p(command), buffer, 254, 0)  # Use mciSendStringW
-    if error_code:
-        logger.error("MCI error code: %s", error_code)
-        raise RuntimeError("WinMM was not able to play the file!")
-    return buffer.value
-
-
-def _playsound_mci_winmm(sound: str) -> None:
-    """Play a sound utilizing windll.winmm."""
-    if sys.platform != "win32":
-        raise RuntimeError("WinMM is only available on Windows systems.")
-    # Select a unique alias for the sound
-    alias = str(uuid.uuid4())
-    logger.debug("winmm: starting playing %s", sound)
-    _send_winmm_mci_command(f'open "{sound}" type mpegvideo alias {alias}')
-    _send_winmm_mci_command(f"play {alias} wait")
-    _send_winmm_mci_command(f"close {alias}")
-    logger.debug("winmm: finishing play %s", sound)
-
-
-def _playsound_wmplayer(sound: str) -> None:
-    import pythoncom
-    import win32com.client
-
-    logger.debug("wmplayer: starting playing %s", sound)
-
-    # Create the Windows Media Player COM object
-    wmp = win32com.client.Dispatch("WMPlayer.OCX")
-    wmp.settings.autoStart = True  # Ensure playback starts automatically
-
-    # Set the URL to your MP3 file
-    wmp.URL = sound
-    wmp.controls.play()  # Start playback
-
-    while wmp.playState != 1:  # playState 1 indicates stopped
-        pythoncom.PumpWaitingMessages()  # Process COM events
-        time.sleep(0.05)
-    # wmp.controls.stop()
-    logger.debug("wmplayer: finishing play %s", sound)
-
-
-def _playsound_afplay(sound: str) -> None:
-    """Uses afplay utility (built-in macOS)."""
-    logger.debug("afplay: starting playing %s", sound)
-    try:
-        subprocess.run(["afplay", sound], check=True)
-    except subprocess.CalledProcessError as e:
-        raise PlaysoundException(f"afplay failed to play sound: {e}")
-    logger.debug("afplay: finishing play %s", sound)
-
-
-def _initialize_default_backend() -> Callable[[str], None]:
-    if sys.platform == "win32":
-        return _playsound_wmplayer
-    if sys.platform == "darwin":
-        return _playsound_afplay
-    # Linux version serves as the fallback
-    # because tools like gstreamer and ffmpeg could be installed on unrecognized systems
-    return _select_linux_backend()
+        raise TypeError(f"invalid backend type '{type(backend)}'")
+    return Sound(path, block, backend_obj)
 
 
 def _remove_cached_downloads(cache: dict[str, str]) -> None:
@@ -277,20 +306,28 @@ def _remove_cached_downloads(cache: dict[str, str]) -> None:
         Path(path).unlink()
 
 
-# ######################## #
-# PLAYSOUND INITIALIZATION #
-# ######################## #
+####################
+## INITIALIZATION ##
+####################
 
-_PLAYSOUND_DEFAULT_BACKEND = _initialize_default_backend()
 atexit.register(_remove_cached_downloads, _DOWNLOAD_CACHE)
 
-_BACKEND_MAPPING = {
-    "afplay": _playsound_afplay,
-    "alsa_mpg123": _playsound_alsa,
-    "ffplay": _playsound_ffplay,
-    "gst_play": _playsound_gst_play,
-    "gst_legacy": _playsound_gst_legacy,
-    "mci_winmm": _playsound_mci_winmm,
+_BACKEND_PREFERENCE = [
+    "gstreamer",  # Linux; should be installed on every distro
+    "wmplayer",  # Windows; requires pywin32 -- should be working well on Windows
+    "ffplay",  # Multiplatform; requires ffmpeg
+    "appkit",  # macOS; requires PyObjC dependency
+    "afplay",  # macOS; should be installed on every macOS
+    "winmm",  # Windows; should be installed on every Windows, but is quirky with variable bitrate MP3s
+    "alsa",  # Linux; only supports .mp3 and .wav and might not be installed
+]
+
+_BACKEND_MAP: dict[str, SoundBackend] = {
+    name.lower(): obj()
+    for name, obj in globals().items()
+    if isinstance(obj, type) and issubclass(obj, SoundBackend) and obj is not SoundBackend
 }
 
-AVAILABLE_BACKENDS = list(_BACKEND_MAPPING.keys())
+assert sorted(_BACKEND_PREFERENCE) == sorted(_BACKEND_MAP.keys()), "forgot to update _BACKEND_PREFERENCE?"
+AVAILABLE_BACKENDS: list[str] = [name for name in _BACKEND_PREFERENCE if _BACKEND_MAP[name].check()]
+DEFAULT_BACKEND: str | None = _auto_select_backend()

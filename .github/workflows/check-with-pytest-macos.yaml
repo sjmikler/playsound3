@@ -1,18 +1,25 @@
-name: Install locally and run pytest on macOS
+name: install locally and run pytest on macOS
 
 on:
   push:
-    branches: ["main"]
+    branches: [ "main" ]
   pull_request:
-    branches: ["main"]
+    branches: [ "main" ]
 
 jobs:
   build:
+    runs-on: macos-14  # not compatible with python<3.9
+    timeout-minutes: 5
 
-    runs-on: macos-latest
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        python-version: [
+          "3.9",
+          "3.10",
+          "3.11",
+          "3.12",
+          "3.13",
+        ]
 
     steps:
       - uses: actions/checkout@v4
@@ -23,7 +30,12 @@ jobs:
       - name: Install dependencies
         run: |
           pip install .
+          pip install PyObjC
           pip install pytest
+
+      - name: Check available backends
+        run: |
+          python -c "import playsound3; print(playsound3.AVAILABLE_BACKENDS)"
 
       - name: Test with pytest
         run: |

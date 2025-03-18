@@ -1,24 +1,25 @@
-name: Install locally and run pytest on Windows
+name: install locally and run pytest on Windows
 
-# This test fails on windows server without audio devices
+# This test fails on Windows server without audio devices
 # So we don't run it automatically
 
 on:
-  workflow_dispatch:
+  workflow_dispatch
 
 #on:
 #  push:
-#    branches: ["main"]
+#    branches: [ "main" ]
 #  pull_request:
-#    branches: ["main"]
+#    branches: [ "main" ]
 
 jobs:
   build:
-
     runs-on: windows-2019
+    timeout-minutes: 5
+
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        python-version: [ "3.7", "3.8", "3.9", "3.10", "3.11", "3.12", "3.13" ]
 
     steps:
       - uses: actions/checkout@v4
@@ -30,6 +31,10 @@ jobs:
         run: |
           pip install .
           pip install pytest
+
+      - name: Check available backends
+        run: |
+          python -c "import playsound3; print(playsound3.AVAILABLE_BACKENDS)"
 
       - name: Test with pytest
         run: |

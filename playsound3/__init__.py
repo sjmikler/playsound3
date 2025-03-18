@@ -1,3 +1,15 @@
-from playsound3.playsound3 import AVAILABLE_BACKENDS, playsound
+__license__ = "MIT"
+__version__ = "3.0.0"
+__author__ = "Szymon Mikler"
 
-__all__ = ["playsound", "AVAILABLE_BACKENDS"]
+from playsound3.playsound3 import (
+    AVAILABLE_BACKENDS,
+    DEFAULT_BACKEND,
+    playsound,
+)
+
+__all__ = [
+    "AVAILABLE_BACKENDS",
+    "DEFAULT_BACKEND",
+    "playsound",
+]
