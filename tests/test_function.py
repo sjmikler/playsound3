@@ -52,6 +52,10 @@ def test_stopping_1s():
             assert not sound.is_alive(), f"backend={backend}, path={path}"
             assert td >= 1.0 and td < 2.0, f"backend={backend}, path={path}"
 
+            # Stopping again should be a no-op
+            sound.stop()
+            assert not sound.is_alive(), f"backend={backend}, path={path}"
+
 
 def test_multiple():
     for backend in AVAILABLE_BACKENDS:
