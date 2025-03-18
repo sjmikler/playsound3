@@ -52,17 +52,6 @@ jobs:
               gstreamer1.0-qt5 \
               gstreamer1.0-pulseaudio
           gst-play-1.0 --version
-      - name: Setup ALSA
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y alsa-utils mpg321
-          aplay --version
-          mpg123 --version
-
-      - name: Configure ALSA to use null audio device
-        run: |
-          echo 'pcm.!default { type null }' | sudo tee /etc/asound.conf
-          echo 'ctl.!default { type null }' | sudo tee -a /etc/asound.conf
 
       - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
