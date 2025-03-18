@@ -61,8 +61,16 @@ def test_multiple():
             playsound(web_mp3_3s, block=False, backend=backend),
             playsound(web_wav_3s, block=False, backend=backend),
         ]
+        time.sleep(0.05)
         for sound in sounds:
             assert sound.is_alive(), f"backend={backend}"
+        time.sleep(1)
+
+        sounds[1].stop()
+        time.sleep(0.05)
+        assert sounds[0].is_alive(), f"backend={backend}"
+        assert sounds[2].is_alive(), f"backend={backend}"
+        assert not sounds[1].is_alive(), f"backend={backend}"
         time.sleep(1)
 
         for sound in sounds:
@@ -73,4 +81,4 @@ def test_multiple():
         time.sleep(0.05)
         for sound in sounds:
             assert not sound.is_alive(), f"backend={backend}"
-        assert td >= 1.0 and td < 2.0, f"backend={backend}"
+        assert td >= 2.0 and td < 3.0, f"backend={backend}"

@@ -18,7 +18,7 @@ def test_non_blocking():
         print(f"Testing backend: {backend}")
 
         sound = playsound(wav, block=False, backend=backend)
-        time.sleep(0.1)
+        time.sleep(0.05)
         assert sound.is_alive()
 
         sound.wait()
