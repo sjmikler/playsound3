@@ -56,7 +56,7 @@ def _prepare_path(sound: str | Path) -> str:
     path = Path(sound)
 
     if not path.exists():
-        raise PlaysoundException(f"File not found: {sound}")
+        raise PlaysoundException(f"file not found: {sound}")
     return path.absolute().as_posix()
 
 
@@ -288,15 +288,14 @@ def playsound(
     if backend is None:
         raise PlaysoundException(_NO_BACKEND_MESSAGE)
 
-    if isinstance(backend, str):
-        assert backend in AVAILABLE_BACKENDS, f"Unsupported backend: {backend}"
+    if isinstance(backend, str) and backend in _BACKEND_MAP:
         backend_obj = _BACKEND_MAP[backend]
     elif isinstance(backend, SoundBackend):
         backend_obj = backend
     elif isinstance(backend, type) and issubclass(backend, SoundBackend):
         backend_obj = backend()
     else:
-        raise TypeError(f"invalid backend type '{type(backend)}'")
+        raise PlaysoundException(f"invalid backend type '{type(backend)}'")
     return Sound(path, block, backend_obj)
 
 
