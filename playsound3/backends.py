@@ -128,9 +128,6 @@ class AppkitPopen:
         self._nssound.play()
         self._duration = self._nssound.duration()
 
-        while self._nssound.isPlaying():
-            time.sleep(WAIT_TIME)
-
     def terminate(self) -> None:
         self._nssound.stop()
         self._duration = time.time() - self._start_time
