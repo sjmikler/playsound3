@@ -129,10 +129,11 @@ class AppkitPopen:
 
     def terminate(self) -> None:
         self._nssound.stop()
+        self._duration = time.time() - self._start_time
 
     def poll(self) -> int | None:
         """None if sound is playing, integer if not."""
-        if time.time() - self._start_time > self._duration:
+        if time.time() - self._start_time >= self._duration:
             return 0
 
         return None
