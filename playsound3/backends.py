@@ -122,6 +122,7 @@ class AppkitPopen:
 
         nsurl: Any = NSURL.fileURLWithPath_(sound)
         self._nssound = NSSound.alloc().initWithContentsOfURL_byReference_(nsurl, True)
+        self._nssound.retain()
         self._start_time = time.time()
 
         self._nssound.play()
