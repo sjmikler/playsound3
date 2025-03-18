@@ -1,4 +1,4 @@
-name: install locally and run pytest on Windows winmm
+name: install locally and run pytest on Windows
 
 # This test fails on Windows server without audio devices
 # So we don't run it automatically

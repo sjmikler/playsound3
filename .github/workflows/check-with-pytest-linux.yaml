@@ -52,6 +52,13 @@ jobs:
               gstreamer1.0-qt5 \
               gstreamer1.0-pulseaudio
           gst-play-1.0 --version
+      - name: Setup ALSA
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install mpg321 alsa-utils
+          aplay --version
+          mpg123 --version
+
       - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
