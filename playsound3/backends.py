@@ -77,6 +77,7 @@ class WinmmPopen:
         error_code = winmm.mciSendStringW(ctypes.c_wchar_p(command), buffer, 254, 0)
 
         if error_code:
+            self._playing = False
             raise RuntimeError(f"winmm was not able to play the file! MCI error code: {error_code}")
         return buffer.value
 
