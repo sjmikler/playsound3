@@ -320,7 +320,7 @@ atexit.register(_remove_cached_downloads, _DOWNLOAD_CACHE)
 
 _BACKEND_PREFERENCE = [
     "gstreamer",  # Linux; should be installed on every distro
-    "wmplayer",  # Windows; requires pywin32 -- should be workign well on Windows
+    "wmplayer",  # Windows; requires pywin32 -- should be working well on Windows
     "ffplay",  # Multiplatform; requires ffmpeg
     "appkit",  # macOS; requires PyObjC dependency
     "afplay",  # macOS; should be installed on every macOS
