@@ -11,6 +11,9 @@ web_wav_3s = "https://samplelib.com/lib/preview/wav/sample-3s.wav"
 for url in [web_mp3_3s, web_wav_3s]:
     _prepare_path(url)
 
+if "wmplayer" in AVAILABLE_BACKENDS:
+    AVAILABLE_BACKENDS.remove("wmplayer")
+
 
 def test_with_blocking_3s():
     for backend in AVAILABLE_BACKENDS:

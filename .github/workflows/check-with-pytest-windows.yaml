@@ -34,4 +34,4 @@ jobs:
 
       - name: Test with pytest
         run: |
-          PLAYSOUND3_BACKEND=winmm pytest tests --log-cli-level=WARNING
+          pytest tests --log-cli-level=WARNING
