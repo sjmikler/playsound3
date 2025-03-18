@@ -55,11 +55,11 @@ jobs:
       - name: Setup ALSA
         run: |
           sudo apt-get update
-          sudo apt-get -y install mpg321 alsa-utils
+          sudo apt-get install -y linux-modules-extra-$(uname -r) alsa-base alsa-utils mpg321
+          sudo depmod -a
+          sudo modprobe snd-dummy
           aplay --version
           mpg123 --version
-          
-          sudo modprobe snd-dummy
 
       - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
