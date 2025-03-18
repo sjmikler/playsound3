@@ -54,12 +54,12 @@ jobs:
           gst-play-1.0 --version
       - name: Setup ALSA
         run: |
-          sudo modprobe snd-dummy
-          
           sudo apt-get update
           sudo apt-get -y install mpg321 alsa-utils
           aplay --version
           mpg123 --version
+          
+          sudo modprobe snd-dummy
 
       - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
