@@ -1,3 +1,4 @@
+import os
 import time
 
 from playsound3 import AVAILABLE_BACKENDS, playsound
@@ -7,6 +8,7 @@ loc_mp3_3s = "tests/sounds/sample3s.mp3"
 web_mp3_3s = "https://samplelib.com/lib/preview/mp3/sample-3s.mp3"
 web_wav_3s = "https://samplelib.com/lib/preview/wav/sample-3s.wav"
 
+CI = os.environ.get("CI", False)
 
 # Download the files to the local cache
 for url in [web_mp3_3s, web_wav_3s]:
@@ -22,6 +24,7 @@ def test_with_blocking_3s():
             td = time.perf_counter() - t0
             assert not sound.is_alive(), f"backend={backend}, path={path}"
             assert td >= 3.0, f"backend={backend}, path={path}"
+            assert CI or td < 3.5, f"backend={backend}, path={path}"
 
 
 def test_non_blocking():
@@ -35,6 +38,7 @@ def test_non_blocking():
             td = time.perf_counter() - t0
             assert not sound.is_alive(), f"backend={backend}, path={path}"
             assert td >= 3.0, f"backend={backend}, path={path}"
+            assert CI or td < 3.5, f"backend={backend}, path={path}"
 
 
 def test_stopping_1s():
