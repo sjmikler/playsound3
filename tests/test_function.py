@@ -1,3 +1,4 @@
+import os
 import time
 
 from playsound3 import AVAILABLE_BACKENDS, playsound
@@ -6,6 +7,9 @@ from playsound3.playsound3 import _prepare_path
 loc_mp3_3s = "tests/sounds/sample3s.mp3"
 web_mp3_3s = "https://samplelib.com/lib/preview/mp3/sample-3s.mp3"
 web_wav_3s = "https://samplelib.com/lib/preview/wav/sample-3s.wav"
+
+if os.environ.get("WINDOWS_CI"):
+    loc_mp3_3s = web_mp3_3s
 
 # Download the files to the local cache
 for url in [web_mp3_3s, web_wav_3s]:
