@@ -3,18 +3,18 @@ name: install locally and run pytest on Windows
 # This test fails on Windows server without audio devices
 # So we don't run it automatically
 
-on:
-  workflow_dispatch
-
 #on:
-#  push:
-#    branches: [ "main" ]
-#  pull_request:
-#    branches: [ "main" ]
+#  workflow_dispatch
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
   build:
-    runs-on: windows-2019
+    runs-on: windows-2022
     timeout-minutes: 5
 
     strategy:
@@ -23,6 +23,26 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      # Add Windows Audio device
+      - name: Print device
+        run: Get-CimInstance Win32_SoundDevice | fl *
+      - name: Install Scream
+        shell: powershell
+        run: |
+          Start-Service audio*
+          Invoke-WebRequest https://github.com/duncanthrax/scream/releases/download/3.6/Scream3.6.zip -OutFile C:\Scream3.6.zip
+          Expand-Archive -Path 'C:\Scream3.6.zip' -DestinationPath 'C:\Scream' -Force
+          $cert = (Get-AuthenticodeSignature C:\Scream\Install\driver\Scream.sys).SignerCertificate
+          $store = [System.Security.Cryptography.X509Certificates.X509Store]::new("TrustedPublisher", "LocalMachine")
+          $store.Open("ReadWrite")
+          $store.Add($cert)
+          $store.Close()
+          cd C:\Scream\Install\driver
+          C:\Scream\Install\helpers\devcon install Scream.inf *Scream
+      - name: Print Audio Device
+        run: Get-CimInstance Win32_SoundDevice | fl *
+
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:

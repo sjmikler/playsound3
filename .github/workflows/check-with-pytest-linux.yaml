@@ -52,6 +52,7 @@ jobs:
               gstreamer1.0-qt5 \
               gstreamer1.0-pulseaudio
           gst-play-1.0 --version
+
       - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5

@@ -114,11 +114,6 @@ class AppkitPopen:
     """Popen-like object for AppKit NSSound backend."""
 
     def __init__(self, sound: str):
-        self._playing: bool = True
-        self.thread = Thread(target=self._play, args=(sound,), daemon=True)
-        self.thread.start()
-
-    def _play(self, sound: str) -> None:
         try:
             from AppKit import NSSound  # type: ignore
             from Foundation import NSURL  # type: ignore
@@ -126,28 +121,24 @@ class AppkitPopen:
             raise PlaysoundException("Install 'PyObjC' to use 'appkit' backend.") from e
 
         nsurl: Any = NSURL.fileURLWithPath_(sound)
-        nssound = NSSound.alloc().initWithContentsOfURL_byReference_(nsurl, True)
-        nssound.play()
+        self._nssound = NSSound.alloc().initWithContentsOfURL_byReference_(nsurl, True)
+        self._nssound.retain()
+        self._start_time = time.time()
 
-        t0 = time.perf_counter()
-        d = nssound.duration()
-
-        while self._playing:
-            time.sleep(WAIT_TIME)
-            t1 = time.perf_counter()
-            if (t1 - t0) > d:
-                break
-
-        nssound.stop()
-        self._playing = False
+        self._nssound.play()
+        self._duration = self._nssound.duration()
 
     def terminate(self) -> None:
-        self._playing = False
+        self._nssound.stop()
+        self._duration = time.time() - self._start_time
 
     def poll(self) -> int | None:
         """None if sound is playing, integer if not."""
-        return None if self._playing else 0
+        if time.time() - self._start_time >= self._duration:
+            return 0
+        return None
 
     def wait(self) -> int:
-        self.thread.join()
+        while time.time() - self._start_time < self._duration:
+            time.sleep(WAIT_TIME)
         return 0
