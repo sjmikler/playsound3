@@ -5,7 +5,6 @@ import logging
 import os
 import shutil
 import subprocess
-import sys
 import tempfile
 import urllib.error
 import urllib.request
@@ -26,6 +25,7 @@ logger = logging.getLogger(__name__)
 
 class PlaysoundException(Exception):
     pass
+
 
 ####################
 ## DOWNLOAD TOOLS ##
