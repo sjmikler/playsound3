@@ -4,7 +4,6 @@ import atexit
 import logging
 import os
 import shutil
-import signal
 import subprocess
 import sys
 import tempfile
@@ -27,10 +26,6 @@ logger = logging.getLogger(__name__)
 
 class PlaysoundException(Exception):
     pass
-
-
-# Windows uses CTRL_C_EVENT, while Unix uses SIGINT
-_SIGINT = signal.CTRL_C_EVENT if sys.platform == "win32" else signal.SIGINT
 
 ####################
 ## DOWNLOAD TOOLS ##
@@ -74,7 +69,7 @@ def _prepare_path(sound: str | Path) -> str:
 class PopenLike(Protocol):
     def poll(self) -> int | None: ...
     def wait(self) -> int: ...
-    def send_signal(self, sig: int) -> None: ...
+    def terminate(self) -> None: ...
 
 
 class SoundBackend(ABC):
@@ -268,8 +263,7 @@ class Sound:
 
     def stop(self) -> None:
         """Stop the sound."""
-        if self.is_alive():
-            self.subprocess.send_signal(_SIGINT)
+        self.subprocess.terminate()
 
 
 def playsound(

@@ -45,7 +45,7 @@ class WmplayerPopen:
         wmp.controls.stop()
         self._playing = False
 
-    def send_signal(self, sig: int) -> None:
+    def terminate(self) -> None:
         self._playing = False
 
     def poll(self) -> int | None:
@@ -98,7 +98,7 @@ class WinmmPopen:
         self._send_winmm_mci_command(f"close {self.alias}")
         self._playing = False
 
-    def send_signal(self, sig: int) -> None:
+    def terminate(self) -> None:
         self._playing = False
 
     def poll(self) -> int | None:
@@ -141,7 +141,7 @@ class AppkitPopen:
         nssound.stop()
         self._playing = False
 
-    def send_signal(self, sig: int) -> None:
+    def terminate(self) -> None:
         self._playing = False
 
     def poll(self) -> int | None:

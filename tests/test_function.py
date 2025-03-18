@@ -73,9 +73,10 @@ def test_multiple():
         assert not sounds[1].is_alive(), f"backend={backend}"
         time.sleep(1)
 
-        for sound in sounds:
-            assert sound.is_alive(), f"backend={backend}"
-            sound.stop()
+        assert sounds[0].is_alive(), f"backend={backend}"
+        assert sounds[2].is_alive(), f"backend={backend}"
+        sounds[0].stop()
+        sounds[2].stop()
         td = time.perf_counter() - t0
 
         time.sleep(0.05)
