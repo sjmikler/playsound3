@@ -11,12 +11,12 @@ web_wav_3s = "https://samplelib.com/lib/preview/wav/sample-3s.wav"
 if os.environ.get("WINDOWS_CI"):
     loc_mp3_3s = web_mp3_3s
 
+    if "winmm" in AVAILABLE_BACKENDS:
+        AVAILABLE_BACKENDS.remove("winmm")
+
 # Download the files to the local cache
 for url in [web_mp3_3s, web_wav_3s]:
     _prepare_path(url)
-
-if "wmplayer" in AVAILABLE_BACKENDS:
-    AVAILABLE_BACKENDS.remove("wmplayer")
 
 
 def test_with_blocking_3s():
