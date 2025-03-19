@@ -326,8 +326,8 @@ _BACKEND_PREFERENCE = [
     "ffplay",  # Multiplatform; requires ffmpeg
     "appkit",  # macOS; requires PyObjC dependency
     "afplay",  # macOS; should be installed on every macOS
-    "winmm",  # Windows; should be installed on every Windows, but is quirky with variable bitrate MP3s
-    "alsa",  # Linux; only supports .mp3 and .wav and might not be installed
+    "winmm",  # Windows; quirky with variable bitrate MP3s
+    "alsa",  # Linux; only supports .mp3 and .wav and requires installation
 ]
 
 _BACKEND_MAP: dict[str, SoundBackend] = {
