@@ -6,11 +6,10 @@ from playsound3.playsound3 import _prepare_path
 
 loc_mp3_3s = "tests/sounds/sample3s.mp3"
 loc_flc_3s = "tests/sounds/sample3s.flac"
-web_mp3_3s = "https://samplelib.com/lib/preview/mp3/sample-3s.mp3"
 web_wav_3s = "https://samplelib.com/lib/preview/wav/sample-3s.wav"
 
-# Download the files to the local cache
-for url in [web_mp3_3s, web_wav_3s]:
+# Download web files to the local cache
+for url in [web_wav_3s]:
     _prepare_path(url)
 
 
@@ -18,9 +17,9 @@ def get_supported_sounds(backend):
     flac_unsupported = ["alsa"]
 
     if backend in flac_unsupported:
-        return [loc_mp3_3s, web_mp3_3s, web_wav_3s]
+        return [loc_mp3_3s, web_wav_3s]
     else:
-        return [loc_mp3_3s, loc_flc_3s, web_mp3_3s, web_wav_3s]
+        return [loc_mp3_3s, loc_flc_3s, web_wav_3s]
 
 
 CI = os.environ.get("CI", False)
