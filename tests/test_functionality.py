@@ -5,19 +5,30 @@ from playsound3 import AVAILABLE_BACKENDS, playsound
 from playsound3.playsound3 import _prepare_path
 
 loc_mp3_3s = "tests/sounds/sample3s.mp3"
+loc_flc_3s = "tests/sounds/sample3s.flac"
 web_mp3_3s = "https://samplelib.com/lib/preview/mp3/sample-3s.mp3"
 web_wav_3s = "https://samplelib.com/lib/preview/wav/sample-3s.wav"
-
-CI = os.environ.get("CI", False)
 
 # Download the files to the local cache
 for url in [web_mp3_3s, web_wav_3s]:
     _prepare_path(url)
 
 
+def get_supported_sounds(backend):
+    flac_unsupported = ["alsa"]
+
+    if backend in flac_unsupported:
+        return [loc_mp3_3s, web_mp3_3s, web_wav_3s]
+    else:
+        return [loc_mp3_3s, loc_flc_3s, web_mp3_3s, web_wav_3s]
+
+
+CI = os.environ.get("CI", False)
+
+
 def test_blocking_3s():
     for backend in AVAILABLE_BACKENDS:
-        for path in [loc_mp3_3s, web_mp3_3s, web_wav_3s]:
+        for path in get_supported_sounds(backend):
             t0 = time.perf_counter()
             sound = playsound(path, block=True, backend=backend)
 
@@ -29,7 +40,7 @@ def test_blocking_3s():
 
 def test_waiting_3s():
     for backend in AVAILABLE_BACKENDS:
-        for path in [loc_mp3_3s, web_mp3_3s, web_wav_3s]:
+        for path in get_supported_sounds(backend):
             t0 = time.perf_counter()
             sound = playsound(path, block=False, backend=backend)
             assert sound.is_alive(), f"backend={backend}, path={path}"
@@ -43,7 +54,7 @@ def test_waiting_3s():
 
 def test_stopping_1s():
     for backend in AVAILABLE_BACKENDS:
-        for path in [loc_mp3_3s, web_mp3_3s, web_wav_3s]:
+        for path in get_supported_sounds(backend):
             t0 = time.perf_counter()
             sound = playsound(path, block=False, backend=backend)
             assert sound.is_alive(), f"backend={backend}, path={path}"
@@ -64,7 +75,7 @@ def test_stopping_1s():
 def test_parallel_1():
     for backend in AVAILABLE_BACKENDS:
         t0 = time.perf_counter()
-        sounds = [playsound(path, block=False, backend=backend) for path in [loc_mp3_3s, web_mp3_3s, web_wav_3s]]
+        sounds = [playsound(path, block=False, backend=backend) for path in get_supported_sounds(backend)]
         time.sleep(0.05)
         for sound in sounds:
             assert sound.is_alive(), f"backend={backend}"
@@ -93,7 +104,7 @@ def test_parallel_2():
     N_PARALLEL = 10  # Careful - this might be loud!
 
     for backend in AVAILABLE_BACKENDS:
-        for path in [loc_mp3_3s, web_mp3_3s, web_wav_3s]:
+        for path in get_supported_sounds(backend):
             sounds = [playsound(path, block=False, backend=backend) for _ in range(N_PARALLEL)]
 
             time.sleep(1)
