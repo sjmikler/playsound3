@@ -51,7 +51,7 @@ sound.stop()
 def playsound(
     sound: str | Path,
     block: bool = True,
-    backend: str | None | SoundBackend | type[SoundBackend] = None,
+    backend: str | None = None,
 ) -> Sound
 ```
 

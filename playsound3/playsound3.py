@@ -274,7 +274,7 @@ class Sound:
 def playsound(
     sound: str | Path,
     block: bool = True,
-    backend: str | None | SoundBackend | type[SoundBackend] = None,
+    backend: str | None = None,
 ) -> Sound:
     """Play a sound file using an available audio backend.
 
@@ -299,6 +299,7 @@ def playsound(
         else:
             raise PlaysoundException(f"unknown backend '{backend}'")
 
+    # Unofficially, you can pass a SoundBackend object
     elif isinstance(backend, SoundBackend):
         backend_obj = backend
     elif isinstance(backend, type) and issubclass(backend, SoundBackend):
