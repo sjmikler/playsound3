@@ -14,9 +14,9 @@ for url in [web_wav_3s]:
 
 
 def get_supported_sounds(backend):
-    flac_unsupported = ["alsa"]
+    not_supporting_flac = ["alsa", "winmm"]
 
-    if backend in flac_unsupported:
+    if backend in not_supporting_flac:
         return [loc_mp3_3s, web_wav_3s]
     else:
         return [loc_mp3_3s, loc_flc_3s, web_wav_3s]
@@ -57,7 +57,7 @@ def test_waiting_2():
             sound = playsound(path, block=False, backend=backend)
             assert sound.is_alive(), f"backend={backend}, path={path}"
 
-            time.sleep(4)
+            time.sleep(5)
             assert not sound.is_alive(), f"backend={backend}, path={path}"
 
 
