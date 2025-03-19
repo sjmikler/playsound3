@@ -288,8 +288,12 @@ def playsound(
     if backend is None:
         raise PlaysoundException(_NO_BACKEND_MESSAGE)
 
-    if isinstance(backend, str) and backend in _BACKEND_MAP:
-        backend_obj = _BACKEND_MAP[backend]
+    if isinstance(backend, str):
+        if backend in _BACKEND_MAP:
+            backend_obj = _BACKEND_MAP[backend]
+        else:
+            raise PlaysoundException(f"invalid backend '{backend}'")
+
     elif isinstance(backend, SoundBackend):
         backend_obj = backend
     elif isinstance(backend, type) and issubclass(backend, SoundBackend):
