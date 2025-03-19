@@ -314,26 +314,6 @@ def _remove_cached_downloads(cache: dict[str, str]) -> None:
         Path(path).unlink()
 
 
-def prefer_backends(*backends: str) -> str | None:
-    """Add backends to the top of the preference list.
-
-    This function sets a soft-preference.
-    Selected backend will be used only if available on the system.
-    After updating the preference, a new default backend will be selected.
-
-    Args:
-        backends: Names of the backend to prefer.
-
-    Returns:
-        Name of the new default backend.
-    """
-    global DEFAULT_BACKEND, _BACKEND_PREFERENCE
-
-    _BACKEND_PREFERENCE = list(backends) + _BACKEND_PREFERENCE
-    DEFAULT_BACKEND = _auto_select_backend()
-    return DEFAULT_BACKEND
-
-
 ####################
 ## INITIALIZATION ##
 ####################
@@ -359,3 +339,24 @@ _BACKEND_MAP: dict[str, SoundBackend] = {
 assert sorted(_BACKEND_PREFERENCE) == sorted(_BACKEND_MAP.keys()), "forgot to update _BACKEND_PREFERENCE?"
 AVAILABLE_BACKENDS: list[str] = [name for name in _BACKEND_PREFERENCE if _BACKEND_MAP[name].check()]
 DEFAULT_BACKEND: str | None = _auto_select_backend()
+
+
+# Should be defined after 'DEFAULT_BACKEND'
+def prefer_backends(*backends: str) -> str | None:
+    """Add backends to the top of the preference list.
+
+    This function sets a soft-preference.
+    Selected backend will be used only if available on the system.
+    After updating the preference, a new default backend will be selected.
+
+    Args:
+        backends: Names of the backend to prefer.
+
+    Returns:
+        Name of the new default backend.
+    """
+    global DEFAULT_BACKEND, _BACKEND_PREFERENCE
+
+    _BACKEND_PREFERENCE = list(backends) + _BACKEND_PREFERENCE
+    DEFAULT_BACKEND = _auto_select_backend()
+    return DEFAULT_BACKEND

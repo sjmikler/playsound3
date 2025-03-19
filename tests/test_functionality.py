@@ -25,7 +25,7 @@ def get_supported_sounds(backend):
 CI = os.environ.get("CI", False)
 
 
-def test_blocking_3s():
+def test_blocking_1():
     for backend in AVAILABLE_BACKENDS:
         for path in get_supported_sounds(backend):
             t0 = time.perf_counter()
@@ -37,7 +37,7 @@ def test_blocking_3s():
             assert CI or td < 5.0, f"backend={backend}, path={path}"
 
 
-def test_waiting_3s():
+def test_waiting_1():
     for backend in AVAILABLE_BACKENDS:
         for path in get_supported_sounds(backend):
             t0 = time.perf_counter()
@@ -51,7 +51,17 @@ def test_waiting_3s():
             assert CI or td < 5.0, f"backend={backend}, path={path}"
 
 
-def test_stopping_1s():
+def test_waiting_2():
+    for backend in AVAILABLE_BACKENDS:
+        for path in get_supported_sounds(backend):
+            sound = playsound(path, block=False, backend=backend)
+            assert sound.is_alive(), f"backend={backend}, path={path}"
+
+            time.sleep(4)
+            assert not sound.is_alive(), f"backend={backend}, path={path}"
+
+
+def test_stopping_1():
     for backend in AVAILABLE_BACKENDS:
         for path in get_supported_sounds(backend):
             t0 = time.perf_counter()
@@ -73,30 +83,31 @@ def test_stopping_1s():
 
 def test_parallel_1():
     for backend in AVAILABLE_BACKENDS:
-        t0 = time.perf_counter()
-        sounds = [playsound(path, block=False, backend=backend) for path in get_supported_sounds(backend)]
-        time.sleep(0.05)
-        for sound in sounds:
-            assert sound.is_alive(), f"backend={backend}"
-        time.sleep(1)
+        for path in get_supported_sounds(backend):
+            t0 = time.perf_counter()
+            sounds = [playsound(path, block=False, backend=backend) for _ in range(3)]
+            time.sleep(0.05)
+            for sound in sounds:
+                assert sound.is_alive(), f"backend={backend}"
+            time.sleep(1)
 
-        sounds[1].stop()
-        time.sleep(0.05)
-        assert sounds[0].is_alive(), f"backend={backend}"
-        assert sounds[2].is_alive(), f"backend={backend}"
-        assert not sounds[1].is_alive(), f"backend={backend}"
-        time.sleep(1)
+            sounds[1].stop()
+            time.sleep(0.05)
+            assert sounds[0].is_alive(), f"backend={backend}"
+            assert sounds[2].is_alive(), f"backend={backend}"
+            assert not sounds[1].is_alive(), f"backend={backend}"
+            time.sleep(1)
 
-        assert sounds[0].is_alive(), f"backend={backend}"
-        assert sounds[2].is_alive(), f"backend={backend}"
-        sounds[0].stop()
-        sounds[2].stop()
-        td = time.perf_counter() - t0
+            assert sounds[0].is_alive(), f"backend={backend}"
+            assert sounds[2].is_alive(), f"backend={backend}"
+            sounds[0].stop()
+            sounds[2].stop()
+            td = time.perf_counter() - t0
 
-        time.sleep(0.05)
-        for sound in sounds:
-            assert not sound.is_alive(), f"backend={backend}"
-        assert td >= 2.0 and td < 3.0, f"backend={backend}"
+            time.sleep(0.05)
+            for sound in sounds:
+                assert not sound.is_alive(), f"backend={backend}"
+            assert td >= 2.0 and td < 3.0, f"backend={backend}"
 
 
 def test_parallel_2():
@@ -115,3 +126,18 @@ def test_parallel_2():
             time.sleep(0.05)
             for sound in sounds:
                 assert not sound.is_alive(), f"backend={backend}, path={path}"
+
+
+def test_parallel_3():
+    for backend in AVAILABLE_BACKENDS:
+        sounds = [playsound(path, block=False, backend=backend) for path in get_supported_sounds(backend)]
+
+        time.sleep(1)
+        for sound in sounds:
+            assert sound.is_alive(), f"backend={backend}"
+        for sound in sounds:
+            sound.stop()
+
+        time.sleep(0.05)
+        for sound in sounds:
+            assert not sound.is_alive(), f"backend={backend}"
