@@ -15,7 +15,7 @@ for url in [web_mp3_3s, web_wav_3s]:
     _prepare_path(url)
 
 
-def test_with_blocking_3s():
+def test_blocking_3s():
     for backend in AVAILABLE_BACKENDS:
         for path in [loc_mp3_3s, web_mp3_3s, web_wav_3s]:
             t0 = time.perf_counter()
@@ -27,7 +27,7 @@ def test_with_blocking_3s():
             assert CI or td < 5.0, f"backend={backend}, path={path}"
 
 
-def test_non_blocking():
+def test_waiting_3s():
     for backend in AVAILABLE_BACKENDS:
         for path in [loc_mp3_3s, web_mp3_3s, web_wav_3s]:
             t0 = time.perf_counter()
@@ -61,14 +61,10 @@ def test_stopping_1s():
             assert not sound.is_alive(), f"backend={backend}, path={path}"
 
 
-def test_multiple():
+def test_parallel_1():
     for backend in AVAILABLE_BACKENDS:
         t0 = time.perf_counter()
-        sounds = [
-            playsound(loc_mp3_3s, block=False, backend=backend),
-            playsound(web_mp3_3s, block=False, backend=backend),
-            playsound(web_wav_3s, block=False, backend=backend),
-        ]
+        sounds = [playsound(path, block=False, backend=backend) for path in [loc_mp3_3s, web_mp3_3s, web_wav_3s]]
         time.sleep(0.05)
         for sound in sounds:
             assert sound.is_alive(), f"backend={backend}"
@@ -91,3 +87,21 @@ def test_multiple():
         for sound in sounds:
             assert not sound.is_alive(), f"backend={backend}"
         assert td >= 2.0 and td < 3.0, f"backend={backend}"
+
+
+def test_parallel_2():
+    N_PARALLEL = 10  # Careful - this might be loud!
+
+    for backend in AVAILABLE_BACKENDS:
+        for path in [loc_mp3_3s, web_mp3_3s, web_wav_3s]:
+            sounds = [playsound(path, block=False, backend=backend) for _ in range(N_PARALLEL)]
+
+            time.sleep(1)
+            for sound in sounds:
+                assert sound.is_alive(), f"backend={backend}, path={path}"
+            for sound in sounds:
+                sound.stop()
+
+            time.sleep(0.05)
+            for sound in sounds:
+                assert not sound.is_alive(), f"backend={backend}, path={path}"
