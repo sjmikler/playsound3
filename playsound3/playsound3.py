@@ -297,7 +297,7 @@ def playsound(
         if backend in _BACKEND_MAP:
             backend_obj = _BACKEND_MAP[backend]
         else:
-            raise PlaysoundException(f"invalid backend '{backend}'")
+            raise PlaysoundException(f"unknown backend '{backend}'")
 
     elif isinstance(backend, SoundBackend):
         backend_obj = backend
