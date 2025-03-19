@@ -60,9 +60,9 @@ def _prepare_path(sound: str | Path) -> str:
     return path.absolute().as_posix()
 
 
-####################
-## SOUND BACKENDS ##
-####################
+########################
+## BACKEND INTERFACES ##
+########################
 
 
 # Imitating subprocess.Popen
@@ -106,6 +106,8 @@ class Gstreamer(SoundBackend):
 class Alsa(SoundBackend):
     """ALSA backend for Linux."""
 
+    pty_master = None
+
     def check(self) -> bool:
         try:
             subprocess.run(["aplay", "--version"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
@@ -117,10 +119,13 @@ class Alsa(SoundBackend):
     def play(self, sound: str) -> subprocess.Popen[bytes]:
         suffix = Path(sound).suffix
 
+        if self.pty_master is None:
+            self.pty_master, _ = os.openpty()
+
         if suffix == ".wav":
             return subprocess.Popen(["aplay", "--quiet", sound])
         elif suffix == ".mp3":
-            return subprocess.Popen(["mpg123", "-q", sound])
+            return subprocess.Popen(["mpg123", "-q", sound], stdin=self.pty_master)
         else:
             raise PlaysoundException(f"ALSA does not support for {suffix} files.")
 
