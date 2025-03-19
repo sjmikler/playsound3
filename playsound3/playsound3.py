@@ -341,7 +341,7 @@ AVAILABLE_BACKENDS: list[str] = [name for name in _BACKEND_PREFERENCE if _BACKEN
 DEFAULT_BACKEND: str | None = _auto_select_backend()
 
 
-# This funciton is defined after 'DEFAULT_BACKEND' because:
+# This funciton is defined here because:
 # SyntaxError: annotated name 'DEFAULT_BACKEND' can't be global
 def prefer_backends(*backends: str) -> str | None:
     """Add backends to the top of the preference list.
