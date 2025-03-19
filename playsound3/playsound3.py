@@ -348,14 +348,16 @@ def prefer_backends(*backends: str) -> str | None:
     """Add backends to the top of the preference list.
 
     This function sets a soft-preference.
-    Selected backend will be used only if available on the system.
-    After updating the preference, a new default backend will be selected.
+    Backend selected here are used only if available on the system.
+    Function can be used to update the preference for a specific system
+    without breaking the cross-platform functionality.
+    After updating the preferences, a new default backend will be selected.
 
     Args:
-        backends: Names of the backend to prefer.
+        backends: Names of the backends to prefer.
 
     Returns:
-        Name of the new default backend.
+        Name of the newly selected default backend.
     """
     global DEFAULT_BACKEND, _BACKEND_PREFERENCE
 
