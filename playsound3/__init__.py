@@ -6,12 +6,12 @@ from playsound3.playsound3 import (
     AVAILABLE_BACKENDS,
     DEFAULT_BACKEND,
     playsound,
-    prefer_backend,
+    prefer_backends,
 )
 
 __all__ = [
     "AVAILABLE_BACKENDS",
     "DEFAULT_BACKEND",
     "playsound",
-    "prefer_backend",
+    "prefer_backends",
 ]

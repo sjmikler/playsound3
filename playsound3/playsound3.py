@@ -314,19 +314,24 @@ def _remove_cached_downloads(cache: dict[str, str]) -> None:
         Path(path).unlink()
 
 
-def prefer_backend(backend_name: str) -> None:
-    """Add a backend to the top of the preference list.
+def prefer_backends(*backends: str) -> str | None:
+    """Add backends to the top of the preference list.
 
     This function sets a soft-preference.
     Selected backend will be used only if available on the system.
+    After updating the preference, a new default backend will be selected.
 
     Args:
-        backend_name: Name of the backend to prefer.
-    """
-    global DEFAULT_BACKEND
+        backends: Names of the backend to prefer.
 
-    _BACKEND_PREFERENCE.insert(0, backend_name)
+    Returns:
+        Name of the new default backend.
+    """
+    global DEFAULT_BACKEND, _BACKEND_PREFERENCE
+
+    _BACKEND_PREFERENCE = list(backends) + _BACKEND_PREFERENCE
     DEFAULT_BACKEND = _auto_select_backend()
+    return DEFAULT_BACKEND
 
 
 ####################
