@@ -342,16 +342,16 @@ AVAILABLE_BACKENDS: list[str] = [name for name in _BACKEND_PREFERENCE if _BACKEN
 DEFAULT_BACKEND: str | None = _auto_select_backend()
 
 
-# This funciton is defined here because:
+# This function is defined here at the bottom because of:
 # SyntaxError: annotated name 'DEFAULT_BACKEND' can't be global
 def prefer_backends(*backends: str) -> str | None:
     """Add backends to the top of the preference list.
 
-    This function sets a soft-preference.
-    Backend selected here are used only if available on the system.
-    Function can be used to update the preference for a specific system
-    without breaking the cross-platform functionality.
-    After updating the preferences, a new default backend will be selected.
+    This function overrides the default backend preference.
+    Backend selected here will be used ONLY if available on the system.
+    This means this function can be used to update the preference for a
+    specific platform without breaking the cross-platform functionality.
+    After updating the preferences, the new default backend is returned.
 
     Args:
         backends: Names of the backends to prefer.
