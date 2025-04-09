@@ -49,7 +49,7 @@ Documentation = "https://github.com/sjmikler/playsound3/blob/main/README.md#quic
 path = "playsound3/__init__.py"
 
 [tool.hatch.build.targets.sdist]
-include = ["playsound3", "README.md"]
+include = ["playsound3", "README.md", "tests"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["playsound3"]
