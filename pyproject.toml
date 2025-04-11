@@ -45,6 +45,13 @@ Home = "https://github.com/sjmikler/playsound3"
 Issues = "https://github.com/sjmikler/playsound3/issues"
 Documentation = "https://github.com/sjmikler/playsound3/blob/main/README.md#quick-start"
 
+[project.optional-dependencies]
+dev = [
+    "pyright",
+    "pytest",
+    "ruff",
+]
+
 [tool.hatch.version]
 path = "playsound3/__init__.py"
 
