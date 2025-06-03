@@ -141,7 +141,10 @@ class Ffplay(SoundBackend):
             return False
 
     def play(self, sound: str) -> subprocess.Popen[bytes]:
-        return subprocess.Popen(["ffplay", "-nodisp", "-autoexit", "-loglevel", "quiet", sound])
+        return subprocess.Popen(
+            ["ffplay", "-nodisp", "-autoexit", "-loglevel", "quiet", sound],
+            stdout=subprocess.DEVNULL,
+        )
 
 
 class Wmplayer(SoundBackend):
