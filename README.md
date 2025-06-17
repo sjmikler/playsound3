@@ -98,6 +98,12 @@ print(DEFAULT_BACKEND)  # for example: "gstreamer"
 * **Multiplatform**
     * FFmpeg
 
+## Supported audio formats
+
+The bare minimum supported by every backend are `.mp3` and `.wav` files.
+Using them will keep your program compatible across different systems.
+To see an exhaustive list of extensions supported by a backend, refer to their respective documentation.
+
 ## Fork information
 
 This repository was originally forked from [playsound](https://github.com/TaylorSMarks/playsound) library created by Taylor Marks.
