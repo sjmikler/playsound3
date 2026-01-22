@@ -98,7 +98,8 @@ def _set_pdeathsig() -> None:
 def get_platform_specific_kwds() -> dict[str, Any]:
     """Get platform-specific keyword arguments for subprocess.Popen."""
     if os.name == "nt":
-        return {}
+        # On Windows, this flag prevents creation of a new console window
+        return {"creationflags": 0x08000000}
     else:
         # On Unix-like systems, we want to ensure that the child process is terminated if the parent process dies
         return {"preexec_fn": _set_pdeathsig}
