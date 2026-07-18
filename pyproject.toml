@@ -38,9 +38,9 @@ dependencies = [
 ]
 
 [project.urls]
-Home = "https://github.com/sjmikler/playsound3"
-Issues = "https://github.com/sjmikler/playsound3/issues"
-Documentation = "https://github.com/sjmikler/playsound3/blob/main/README.md#quick-start"
+Home = "https://github.com/szmikler/playsound3"
+Issues = "https://github.com/szmikler/playsound3/issues"
+Documentation = "https://github.com/szmikler/playsound3/blob/main/README.md#quick-start"
 
 [project.optional-dependencies]
 dev = [

@@ -7,6 +7,7 @@ import shutil
 import signal
 import subprocess
 import tempfile
+import urllib.parse
 import urllib.request
 from abc import ABC, abstractmethod
 from importlib.util import find_spec
@@ -42,10 +43,17 @@ def _prepare_path(sound: str | Path) -> str:
     if isinstance(sound, str) and sound.startswith(("http://", "https://")):
         # To play file from URL, we download the file first to a temporary location and cache it
         if sound not in _DOWNLOAD_CACHE:
-            sound_suffix = Path(sound).suffix
+            # Only inspect the URL path. Query parameters are not part of the
+            # filename and can otherwise produce suffixes such as ".mp3?token=...".
+            sound_suffix = Path(urllib.parse.urlsplit(sound).path).suffix
             with tempfile.NamedTemporaryFile(delete=False, prefix="playsound3-", suffix=sound_suffix) as f:
-                _download_sound_from_web(sound, Path(f.name))
-                _DOWNLOAD_CACHE[sound] = f.name
+                temporary_path = Path(f.name)
+            try:
+                _download_sound_from_web(sound, temporary_path)
+            except Exception:
+                temporary_path.unlink(missing_ok=True)
+                raise
+            _DOWNLOAD_CACHE[sound] = temporary_path.as_posix()
         sound = _DOWNLOAD_CACHE[sound]
 
     path = Path(sound)
